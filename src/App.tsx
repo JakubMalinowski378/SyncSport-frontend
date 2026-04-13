@@ -1,18 +1,6 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-
-function Home() {
-  return (
-    <div className="container mt-5">
-      <div className="jumbotron p-5 bg-light rounded text-center">
-        <h1 className="display-4">Welcome to SyncSport!</h1>
-        <p className="lead">Your ultimate destination for synchronizing sports activities.</p>
-        <hr className="my-4" />
-        <p>Built with React, Vite, TypeScript, Bootstrap, and React Router.</p>
-        <Link className="btn btn-primary btn-lg" to="/about" role="button">Learn more</Link>
-      </div>
-    </div>
-  );
-}
+import LoginPage from './pages/LoginPage';
+import HomePage from './pages/HomePage';
 
 function About() {
   return (
@@ -38,14 +26,18 @@ export default function App() {
               <li className="nav-item">
                 <Link className="nav-link" to="/about">About</Link>
               </li>
+              <li className="nav-item">
+                <Link className="nav-link" to="/login">Login</Link>
+              </li>
             </ul>
           </div>
         </div>
       </nav>
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/about" element={<About />} />
+        <Route path="/login" element={<LoginPage />} />
       </Routes>
     </BrowserRouter>
   );
