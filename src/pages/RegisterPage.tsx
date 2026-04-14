@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
-import { useAuth } from '../hooks/useAuth';
 
-export default function LoginPage() {
+export default function RegisterPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
@@ -18,23 +20,22 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await apiClient.post('/api/accounts/sign-in', {
+      await apiClient.post('/api/accounts/sign-up', {
         email,
         password,
+        firstName,
+        lastName
       });
 
-      const { jwtToken } = response.data;
-      if (jwtToken) {
-        login(jwtToken);
-        navigate('/');
-      } else {
-        setError('Login failed: Invalid token received.');
-      }
+      setIsSuccess(true);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.title) {
         setError(err.response.data.title);
       } else {
-        setError('An unexpected error occurred during login. Please try again.');
+        setError('An unexpected error occurred during registration. Please try again.');
       }
     } finally {
       setIsLoading(false);
@@ -47,7 +48,7 @@ export default function LoginPage() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h2 className="text-center mb-4">Log In to SyncSport</h2>
+              <h2 className="text-center mb-4">Create an Account</h2>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -55,7 +56,40 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {isSuccess && (
+                <div className="alert alert-success" role="alert">
+                  Registration successful! Redirecting to login...
+                </div>
+              )}
+
               <form onSubmit={handleSubmit}>
+                <div className="row mb-3">
+                  <div className="col">
+                    <label htmlFor="firstNameInput" className="form-label">First Name</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      id="firstNameInput"
+                      placeholder="John"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="col">
+                    <label htmlFor="lastNameInput" className="form-label">Last Name</label>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      id="lastNameInput"
+                      placeholder="Doe"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
                 <div className="mb-3">
                   <label htmlFor="emailInput" className="form-label">Email Address</label>
                   <input 
@@ -68,13 +102,14 @@ export default function LoginPage() {
                     required
                   />
                 </div>
+
                 <div className="mb-4">
                   <label htmlFor="passwordInput" className="form-label">Password</label>
                   <input 
                     type="password" 
                     className="form-control" 
                     id="passwordInput"
-                    placeholder="Enter your password"
+                    placeholder="Create a strong password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -84,14 +119,14 @@ export default function LoginPage() {
                 <button 
                   type="submit" 
                   className="btn btn-primary w-100 py-2 mb-3"
-                  disabled={isLoading}
+                  disabled={isLoading || isSuccess}
                 >
-                  {isLoading ? 'Logging in...' : 'Log In'}
+                  {isLoading ? 'Creating account...' : 'Sign Up'}
                 </button>
-
+                
                 <div className="text-center">
-                  <span className="text-muted">Don't have an account? </span>
-                  <Link to="/register" className="text-decoration-none">Sign Up</Link>
+                  <span className="text-muted">Already have an account? </span>
+                  <Link to="/login" className="text-decoration-none">Log In</Link>
                 </div>
               </form>
             </div>
