@@ -7,6 +7,7 @@ import HomePage from './pages/HomePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 function About() {
@@ -34,6 +35,9 @@ export default function AppRoutes() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/profile" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
+            } />
+            <Route path="/admin/*" element={
+              <PrivateRoute><AdminDashboardPage /></PrivateRoute>
             } />
           </Routes>
         </main>

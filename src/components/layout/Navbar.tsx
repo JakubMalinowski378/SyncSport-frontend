@@ -2,6 +2,7 @@ import { Navbar, Nav, Container, Button } from 'react-bootstrap';
 import { Link, NavLink } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth }  from '../../hooks/useAuth';
+import { UserRole } from '../../context/AuthContext';
 
 export default function AppNavbar() {
   const { theme, toggleTheme } = useTheme();
@@ -19,6 +20,9 @@ export default function AppNavbar() {
             <Nav.Link as={NavLink} to="/browse">Browse</Nav.Link>
             {user
               ? <>
+                  {user.role === UserRole.Admin && (
+                    <Nav.Link as={NavLink} to="/admin">Admin Dashboard</Nav.Link>
+                  )}
                   <Nav.Link as={NavLink} to="/my-bookings">My Bookings</Nav.Link>
                   <Nav.Link as={NavLink} to="/profile">My Profile</Nav.Link>
                   <Button variant="outline-danger" size="sm" onClick={logout}>Logout</Button>
