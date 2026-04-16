@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import HomePage from './pages/HomePage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ProfilePage from './pages/ProfilePage';
+import PrivateRoute from './components/auth/PrivateRoute';
 
 function About() {
   return (
@@ -30,6 +32,9 @@ export default function AppRoutes() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/profile" element={
+              <PrivateRoute><ProfilePage /></PrivateRoute>
+            } />
           </Routes>
         </main>
         <AppFooter />

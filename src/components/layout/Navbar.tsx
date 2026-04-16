@@ -20,6 +20,7 @@ export default function AppNavbar() {
             {user
               ? <>
                   <Nav.Link as={NavLink} to="/my-bookings">My Bookings</Nav.Link>
+                  <Nav.Link as={NavLink} to="/profile">My Profile</Nav.Link>
                   <Button variant="outline-danger" size="sm" onClick={logout}>Logout</Button>
                 </>
               : <Nav.Link as={NavLink} to="/login">Login</Nav.Link>
