@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
+import PasswordInput from '../components/shared/PasswordInput';
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
@@ -76,9 +77,7 @@ export default function ResetPasswordPage() {
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
                     <label htmlFor="passwordInput" className="form-label">New Password</label>
-                    <input 
-                      type="password" 
-                      className="form-control" 
+                    <PasswordInput 
                       id="passwordInput"
                       placeholder="Enter new password"
                       value={newPassword}
@@ -89,9 +88,7 @@ export default function ResetPasswordPage() {
 
                   <div className="mb-4">
                     <label htmlFor="confirmPasswordInput" className="form-label">Confirm Password</label>
-                    <input 
-                      type="password" 
-                      className="form-control" 
+                    <PasswordInput 
                       id="confirmPasswordInput"
                       placeholder="Confirm new password"
                       value={confirmPassword}

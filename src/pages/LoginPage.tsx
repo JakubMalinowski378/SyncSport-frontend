@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
+import PasswordInput from '../components/shared/PasswordInput';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -79,9 +80,8 @@ export default function LoginPage() {
                     <label htmlFor="passwordInput" className="form-label mb-0">Password</label>
                     <Link to="/forgot-password" className="text-decoration-none small">Forgot password?</Link>
                   </div>
-                  <input 
-                    type="password" 
-                    className="form-control mt-2" 
+                  <PasswordInput 
+                    className="mt-2" 
                     id="passwordInput"
                     placeholder="Enter your password"
                     value={password}

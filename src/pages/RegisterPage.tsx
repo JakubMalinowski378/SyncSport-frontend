@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
+import PasswordInput from '../components/shared/PasswordInput';
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState('');
@@ -112,9 +113,7 @@ export default function RegisterPage() {
 
                 <div className="mb-4">
                   <label htmlFor="passwordInput" className="form-label">Password</label>
-                  <input 
-                    type="password" 
-                    className="form-control" 
+                  <PasswordInput 
                     id="passwordInput"
                     placeholder="Create a strong password"
                     value={password}
@@ -125,9 +124,7 @@ export default function RegisterPage() {
 
                 <div className="mb-4">
                   <label htmlFor="confirmPasswordInput" className="form-label">Confirm Password</label>
-                  <input 
-                    type="password" 
-                    className="form-control" 
+                  <PasswordInput 
                     id="confirmPasswordInput"
                     placeholder="Confirm your password"
                     value={confirmPassword}
