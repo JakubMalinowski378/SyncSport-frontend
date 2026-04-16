@@ -26,8 +26,11 @@ export default function LoginPage() {
         password,
       });
 
-      const { jwtToken } = response.data;
+      const { jwtToken, refreshToken } = response.data;
       if (jwtToken) {
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
         login(jwtToken);
         navigate(from, { replace: true });
       } else {
