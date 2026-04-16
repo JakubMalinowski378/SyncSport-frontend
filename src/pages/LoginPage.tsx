@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import { useAuth } from '../hooks/useAuth';
 
@@ -11,6 +11,9 @@ export default function LoginPage() {
 
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -26,7 +29,7 @@ export default function LoginPage() {
       const { jwtToken } = response.data;
       if (jwtToken) {
         login(jwtToken);
-        navigate('/');
+        navigate(from, { replace: true });
       } else {
         setError('Login failed: Invalid token received.');
       }
