@@ -75,10 +75,13 @@ export default function LoginPage() {
                   />
                 </div>
                 <div className="mb-4">
-                  <label htmlFor="passwordInput" className="form-label">Password</label>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <label htmlFor="passwordInput" className="form-label mb-0">Password</label>
+                    <Link to="/forgot-password" className="text-decoration-none small">Forgot password?</Link>
+                  </div>
                   <input 
                     type="password" 
-                    className="form-control" 
+                    className="form-control mt-2" 
                     id="passwordInput"
                     placeholder="Enter your password"
                     value={password}
