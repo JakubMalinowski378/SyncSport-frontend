@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-bootstrap';
+import { BsTrash } from 'react-icons/bs';
 import apiClient from '../../../services/apiClient';
 
 interface CreateFacilityModalProps {
@@ -241,7 +242,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
                     </Col>
                     <Col md={1} className="text-end">
                       <Button variant="outline-danger" size="sm" onClick={() => removeCustomDate(idx)} title="Remove date">
-                        ??
+                        <BsTrash />
                       </Button>
                     </Col>
                   </Row>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Card, Form, Row, Col, Pagination } from 'react-bootstrap';
+import { BsArrowUp, BsArrowDown, BsListCheck } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import DeleteUserModal from './modals/DeleteUserModal';
 import ChangeRoleModal from './modals/ChangeRoleModal';
@@ -136,10 +137,10 @@ export default function UserManagement() {
             <tr>
               <th>ID</th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('FirstName')}>
-                Name {sortColumn === 'FirstName' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Name {sortColumn === 'FirstName' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Email')}>
-                Email {sortColumn === 'Email' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Email {sortColumn === 'Email' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th>Role</th>
               <th>Status</th>
@@ -170,7 +171,7 @@ export default function UserManagement() {
                         onClick={() => openFacilitiesModal(u)}
                         title="View Managed Facilities"
                       >
-                        📋
+                        <BsListCheck size={18} />
                       </Button>
                     )}
                   </td>

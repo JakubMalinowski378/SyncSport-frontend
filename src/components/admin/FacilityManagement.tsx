@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 'react-bootstrap';
+import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import CreateFacilityModal from './modals/CreateFacilityModal';
 
@@ -115,10 +116,10 @@ export default function FacilityManagement() {
             <tr>
               <th>ID</th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Name')}>
-                Name {sortColumn === 'Name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Name {sortColumn === 'Name' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Address')}>
-                Address {sortColumn === 'Address' && (sortOrder === 'asc' ? '↑' : '↓')}
+                Address {sortColumn === 'Address' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th className="text-end">Actions</th>
             </tr>
@@ -135,8 +136,8 @@ export default function FacilityManagement() {
                   <td>{f.name}</td>
                   <td>{f.address}</td>
                   <td className="text-end">
-                    <Button variant="outline-primary" size="sm">
-                      Edit
+                    <Button variant="outline-primary" size="sm" title="Edit">
+                      <BsPencilSquare />
                     </Button>
                   </td>
                 </tr>
