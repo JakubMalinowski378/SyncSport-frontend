@@ -4,6 +4,7 @@ import apiClient from '../../services/apiClient';
 import DeleteUserModal from './modals/DeleteUserModal';
 import ChangeRoleModal from './modals/ChangeRoleModal';
 import ToggleUserStatusModal from './modals/ToggleUserStatusModal';
+import ManagedFacilitiesModal from './modals/ManagedFacilitiesModal';
 
 export interface User {
   id: string;
@@ -37,7 +38,9 @@ export default function UserManagement() {
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [userToDisable, setUserToDisable] = useState<User | null>(null);
 
-  // Query states
+  const [showFacilitiesModal, setShowFacilitiesModal] = useState(false);
+  const [userToViewFacilities, setUserToViewFacilities] = useState<User | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState('Email');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -75,7 +78,7 @@ export default function UserManagement() {
     if (pageNumber === 1) {
       fetchUsers();
     } else {
-      setPageNumber(1); // Effect will trigger fetch
+      setPageNumber(1);
     }
   };
 
@@ -92,6 +95,11 @@ export default function UserManagement() {
   const openRoleModal = (user: User) => {
     setUserToChangeRole(user);
     setShowRoleModal(true);
+  };
+
+  const openFacilitiesModal = (user: User) => {
+    setUserToViewFacilities(user);
+    setShowFacilitiesModal(true);
   };
 
   return (
@@ -154,6 +162,17 @@ export default function UserManagement() {
                                           u.role?.toLowerCase() === 'manager' ? 'bg-warning' : 'bg-primary'}`}>
                       {u.role || 'User'}
                     </span>
+                    {u.role?.toLowerCase() === 'manager' && (
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="ms-2 p-0 text-decoration-none"
+                        onClick={() => openFacilitiesModal(u)}
+                        title="View Managed Facilities"
+                      >
+                        📋
+                      </Button>
+                    )}
                   </td>
                   <td>
                      <span className={`badge ${u.isActive ? 'bg-success' : 'bg-secondary'}`}>
@@ -212,6 +231,12 @@ export default function UserManagement() {
         onHide={() => setShowDisableModal(false)}
         onSuccess={fetchUsers}
         user={userToDisable}
+      />
+
+      <ManagedFacilitiesModal
+        show={showFacilitiesModal}
+        onHide={() => setShowFacilitiesModal(false)}
+        user={userToViewFacilities}
       />
     </Card>
   );
