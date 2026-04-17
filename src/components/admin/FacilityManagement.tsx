@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 'react-bootstrap';
 import apiClient from '../../services/apiClient';
+import CreateFacilityModal from './modals/CreateFacilityModal';
 
 export interface Facility {
   id: string;
@@ -28,6 +29,8 @@ export default function FacilityManagement() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState('Name');
   const [sortOrder, setSortOrder] = useState('asc');
+
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const fetchFacilities = async () => {
     setLoading(true);
@@ -77,9 +80,14 @@ export default function FacilityManagement() {
     <Card className="bg-card w-100 border-secondary">
       <Card.Header className="d-flex justify-content-between align-items-center bg-card border-secondary">
         <h5 className="mb-0 fw-bold">Facility Management</h5>
-        <Button variant="outline-primary" size="sm" onClick={fetchFacilities} disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Refresh'}
-        </Button>
+        <div>
+          <Button variant="success" size="sm" className="me-2" onClick={() => setShowCreateModal(true)}>
+            Add Facility
+          </Button>
+          <Button variant="outline-primary" size="sm" onClick={fetchFacilities} disabled={loading}>
+            {loading ? <Spinner size="sm" /> : 'Refresh'}
+          </Button>
+        </div>
       </Card.Header>
       
       <Card.Body>
@@ -147,6 +155,12 @@ export default function FacilityManagement() {
           </div>
         )}
       </Card.Body>
+
+      <CreateFacilityModal
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+        onSuccess={fetchFacilities}
+      />
     </Card>
   );
 }
