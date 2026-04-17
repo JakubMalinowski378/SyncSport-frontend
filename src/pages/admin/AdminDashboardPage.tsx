@@ -1,6 +1,7 @@
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import { NavLink, Routes, Route, Navigate } from 'react-router-dom';
 import UserManagement from '../../components/admin/UserManagement';
+import FacilityManagement from '../../components/admin/FacilityManagement';
 
 export default function AdminDashboardPage() {
   return (
@@ -15,6 +16,12 @@ export default function AdminDashboardPage() {
                 User Management
               </Nav.Link>
             </Nav.Item>
+            <Nav.Item>
+              <Nav.Link as={NavLink} to="/admin/facilities" 
+                        className={({ isActive }) => `rounded-3 ${isActive ? 'active' : 'text-body'}`}>
+                Facility Management
+              </Nav.Link>
+            </Nav.Item>
           </Nav>
         </Col>
 
@@ -22,6 +29,7 @@ export default function AdminDashboardPage() {
           <Routes>
             <Route path="/" element={<Navigate to="/admin/users" replace />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="facilities" element={<FacilityManagement />} />
           </Routes>
         </Col>
       </Row>
