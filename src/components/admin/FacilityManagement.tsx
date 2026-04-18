@@ -3,6 +3,7 @@ import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 
 import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import CreateFacilityModal from './modals/CreateFacilityModal';
+import EditFacilityModal from './modals/EditFacilityModal';
 
 export interface Facility {
   id: string;
@@ -32,6 +33,9 @@ export default function FacilityManagement() {
   const [sortOrder, setSortOrder] = useState('asc');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
   const fetchFacilities = async () => {
     setLoading(true);
@@ -136,7 +140,15 @@ export default function FacilityManagement() {
                   <td>{f.name}</td>
                   <td>{f.address}</td>
                   <td className="text-end">
-                    <Button variant="outline-primary" size="sm" title="Edit">
+                    <Button 
+                      variant="outline-primary" 
+                      size="sm" 
+                      title="Edit"
+                      onClick={() => {
+                        setSelectedFacility(f);
+                        setShowEditModal(true);
+                      }}
+                    >
                       <BsPencilSquare />
                     </Button>
                   </td>
@@ -161,6 +173,16 @@ export default function FacilityManagement() {
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onSuccess={fetchFacilities}
+      />
+
+      <EditFacilityModal
+        show={showEditModal}
+        onHide={() => {
+          setShowEditModal(false);
+          setSelectedFacility(null);
+        }}
+        onSuccess={fetchFacilities}
+        facility={selectedFacility}
       />
     </Card>
   );

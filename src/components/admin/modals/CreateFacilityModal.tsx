@@ -24,13 +24,13 @@ interface CustomDateHour {
 }
 
 const DAYS_OF_WEEK = [
-  { value: 0, label: 'Sunday' },
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' }
+  { value: 0, label: 'Monday' },
+  { value: 1, label: 'Tuesday' },
+  { value: 2, label: 'Wednesday' },
+  { value: 3, label: 'Thursday' },
+  { value: 4, label: 'Friday' },
+  { value: 5, label: 'Saturday' },
+  { value: 6, label: 'Sunday' }
 ];
 
 export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateFacilityModalProps) {
@@ -40,8 +40,8 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHour[]>(
     DAYS_OF_WEEK.map(d => ({
       dayOfWeek: d.value,
-      openTime: '08:00',
-      closeTime: '22:00',
+      openTime: '06:00',
+      closeTime: '23:00',
       isClosed: false
     }))
   );
