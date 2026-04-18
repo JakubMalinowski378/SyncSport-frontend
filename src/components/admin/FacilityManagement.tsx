@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 'react-bootstrap';
 import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import CreateFacilityModal from './modals/CreateFacilityModal';
 import EditFacilityModal from './modals/EditFacilityModal';
 import DeleteFacilityModal from './modals/DeleteFacilityModal';
+import FacilityCourts from './FacilityCourts';
 import { BsTrash } from 'react-icons/bs';
 
 export interface Facility {
@@ -39,6 +40,8 @@ export default function FacilityManagement() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+
+  const [expandedFacilityId, setExpandedFacilityId] = useState<string | null>(null);
 
   const fetchFacilities = async () => {
     setLoading(true);
@@ -82,6 +85,11 @@ export default function FacilityManagement() {
       setSortOrder('asc');
     }
     setPageNumber(1);
+    setExpandedFacilityId(null);
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedFacilityId(prev => (prev === id ? null : id));
   };
 
   return (
@@ -138,36 +146,45 @@ export default function FacilityManagement() {
               <tr><td colSpan={4} className="text-center py-4 text-secondary">No facilities found.</td></tr>
             ) : (
               facilities.map(f => (
-                <tr key={f.id}>
-                  <td className="text-secondary small text-truncate" style={{ maxWidth: '100px' }}>{f.id}</td>
-                  <td>{f.name}</td>
-                  <td>{f.address}</td>
-                  <td className="text-end">
-                    <Button 
-                      variant="outline-primary" 
-                      size="sm" 
-                      title="Edit"
-                      className="me-2"
-                      onClick={() => {
-                        setSelectedFacility(f);
-                        setShowEditModal(true);
-                      }}
-                    >
-                      <BsPencilSquare />
-                    </Button>
-                    <Button 
-                      variant="outline-danger" 
-                      size="sm" 
-                      title="Delete"
-                      onClick={() => {
-                        setSelectedFacility(f);
-                        setShowDeleteModal(true);
-                      }}
-                    >
-                      <BsTrash />
-                    </Button>
-                  </td>
-                </tr>
+                <React.Fragment key={f.id}>
+                  <tr style={{ cursor: 'pointer' }} onClick={() => toggleExpand(f.id)}>
+                    <td className="text-secondary small text-truncate" style={{ maxWidth: '100px' }}>{f.id}</td>
+                    <td>{f.name}</td>
+                    <td>{f.address}</td>
+                    <td className="text-end" onClick={e => e.stopPropagation()}>
+                      <Button 
+                        variant="outline-primary" 
+                        size="sm" 
+                        title="Edit"
+                        className="me-2"
+                        onClick={() => {
+                          setSelectedFacility(f);
+                          setShowEditModal(true);
+                        }}
+                      >
+                        <BsPencilSquare />
+                      </Button>
+                      <Button 
+                        variant="outline-danger" 
+                        size="sm" 
+                        title="Delete"
+                        onClick={() => {
+                          setSelectedFacility(f);
+                          setShowDeleteModal(true);
+                        }}
+                      >
+                        <BsTrash />
+                      </Button>
+                    </td>
+                  </tr>
+                  {expandedFacilityId === f.id && (
+                    <tr>
+                      <td colSpan={4} className="p-0 border-bottom border-secondary">
+                        <FacilityCourts facilityId={f.id} />
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               ))
             )}
           </tbody>
