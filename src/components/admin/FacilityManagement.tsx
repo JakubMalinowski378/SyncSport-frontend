@@ -4,6 +4,8 @@ import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import CreateFacilityModal from './modals/CreateFacilityModal';
 import EditFacilityModal from './modals/EditFacilityModal';
+import DeleteFacilityModal from './modals/DeleteFacilityModal';
+import { BsTrash } from 'react-icons/bs';
 
 export interface Facility {
   id: string;
@@ -35,6 +37,7 @@ export default function FacilityManagement() {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
   const fetchFacilities = async () => {
@@ -144,12 +147,24 @@ export default function FacilityManagement() {
                       variant="outline-primary" 
                       size="sm" 
                       title="Edit"
+                      className="me-2"
                       onClick={() => {
                         setSelectedFacility(f);
                         setShowEditModal(true);
                       }}
                     >
                       <BsPencilSquare />
+                    </Button>
+                    <Button 
+                      variant="outline-danger" 
+                      size="sm" 
+                      title="Delete"
+                      onClick={() => {
+                        setSelectedFacility(f);
+                        setShowDeleteModal(true);
+                      }}
+                    >
+                      <BsTrash />
                     </Button>
                   </td>
                 </tr>
@@ -179,6 +194,16 @@ export default function FacilityManagement() {
         show={showEditModal}
         onHide={() => {
           setShowEditModal(false);
+          setSelectedFacility(null);
+        }}
+        onSuccess={fetchFacilities}
+        facility={selectedFacility}
+      />
+
+      <DeleteFacilityModal
+        show={showDeleteModal}
+        onHide={() => {
+          setShowDeleteModal(false);
           setSelectedFacility(null);
         }}
         onSuccess={fetchFacilities}
