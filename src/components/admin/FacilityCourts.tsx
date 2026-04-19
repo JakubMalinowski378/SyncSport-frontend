@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Table, Spinner, Alert } from 'react-bootstrap';
+import { Table, Spinner, Alert, Button } from 'react-bootstrap';
 import apiClient from '../../services/apiClient';
+import CreateCourtModal from './modals/CreateCourtModal';
 
 interface Court {
   id: string;
@@ -25,23 +26,24 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   const [courts, setCourts] = useState<Court[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  const fetchCourts = async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${facilityId}/courts`, {
+        params: { PageNumber: 1, PageSize: 30 }
+      });
+      setCourts(res.data.items || []);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch courts');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchCourts = async () => {
-      setLoading(true);
-      try {
-        const res = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${facilityId}/courts`, {
-          params: { PageNumber: 1, PageSize: 30 }
-        });
-        setCourts(res.data.items || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to fetch courts');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchCourts();
   }, [facilityId]);
 
@@ -53,31 +55,44 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
     return <Alert variant="danger" className="m-3">{error}</Alert>;
   }
 
-  if (courts.length === 0) {
-    return <p className="text-secondary small m-3">No courts assigned to this facility.</p>;
-  }
-
   return (
     <div className="p-3 bg-card border-top border-secondary">
-      <h6 className="fw-bold mb-3">Assigned Courts</h6>
-      <Table size="sm" responsive className="mb-0 text-body">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Surface</th>
-            <th>Active</th>
-          </tr>
-        </thead>
-        <tbody>
-          {courts.map(c => (
-            <tr key={c.id}>
-              <td>{c.name}</td>
-              <td>{c.surfaceType}</td>
-              <td>{c.isActive ? 'Yes' : 'No'}</td>
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h6 className="fw-bold mb-0">Assigned Courts</h6>
+        <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
+          + Add Court
+        </Button>
+      </div>
+      
+      {courts.length === 0 ? (
+        <p className="text-secondary small">No courts assigned to this facility.</p>
+      ) : (
+        <Table size="sm" responsive className="mb-0 text-body">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Surface</th>
+              <th>Active</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {courts.map(c => (
+              <tr key={c.id}>
+                <td>{c.name}</td>
+                <td>{c.surfaceType}</td>
+                <td>{c.isActive ? 'Yes' : 'No'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+
+      <CreateCourtModal
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+        onSuccess={fetchCourts}
+        facilityId={facilityId}
+      />
     </div>
   );
 }
