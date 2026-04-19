@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Table, Spinner, Alert, Button } from 'react-bootstrap';
 import apiClient from '../../services/apiClient';
 import CreateCourtModal from './modals/CreateCourtModal';
+import EditCourtModal from './modals/EditCourtModal';
 import DeleteCourtModal from './modals/DeleteCourtModal';
-import { BsTrash } from 'react-icons/bs';
+import { BsTrash, BsPencilSquare } from 'react-icons/bs';
 
 interface Court {
   id: string;
@@ -29,6 +30,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
 
@@ -88,6 +90,18 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
                 <td>{c.isActive ? 'Yes' : 'No'}</td>
                 <td className="text-end">
                   <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    title="Edit Court"
+                    className="me-2"
+                    onClick={() => {
+                      setSelectedCourt(c);
+                      setShowEditModal(true);
+                    }}
+                  >
+                    <BsPencilSquare />
+                  </Button>
+                  <Button 
                     variant="outline-danger" 
                     size="sm" 
                     title="Delete Court"
@@ -110,6 +124,17 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
         onHide={() => setShowCreateModal(false)}
         onSuccess={fetchCourts}
         facilityId={facilityId}
+      />
+
+      <EditCourtModal
+        show={showEditModal}
+        onHide={() => {
+          setShowEditModal(false);
+          setSelectedCourt(null);
+        }}
+        onSuccess={fetchCourts}
+        facilityId={facilityId}
+        court={selectedCourt}
       />
 
       <DeleteCourtModal
