@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Table, Spinner, Alert, Button } from 'react-bootstrap';
 import apiClient from '../../services/apiClient';
 import CreateCourtModal from './modals/CreateCourtModal';
+import DeleteCourtModal from './modals/DeleteCourtModal';
+import { BsTrash } from 'react-icons/bs';
 
 interface Court {
   id: string;
@@ -27,6 +29,8 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
 
   const fetchCourts = async () => {
     setLoading(true);
@@ -73,6 +77,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
               <th>Name</th>
               <th>Surface</th>
               <th>Active</th>
+              <th className="text-end">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -81,6 +86,19 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
                 <td>{c.name}</td>
                 <td>{c.surfaceType}</td>
                 <td>{c.isActive ? 'Yes' : 'No'}</td>
+                <td className="text-end">
+                  <Button 
+                    variant="outline-danger" 
+                    size="sm" 
+                    title="Delete Court"
+                    onClick={() => {
+                      setSelectedCourt(c);
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    <BsTrash />
+                  </Button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -92,6 +110,17 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
         onHide={() => setShowCreateModal(false)}
         onSuccess={fetchCourts}
         facilityId={facilityId}
+      />
+
+      <DeleteCourtModal
+        show={showDeleteModal}
+        onHide={() => {
+          setShowDeleteModal(false);
+          setSelectedCourt(null);
+        }}
+        onSuccess={fetchCourts}
+        facilityId={facilityId}
+        court={selectedCourt}
       />
     </div>
   );
