@@ -8,6 +8,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import FacilityCourtsPage from './pages/FacilityCourtsPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 function About() {
@@ -33,6 +34,7 @@ export default function AppRoutes() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/facility/:id" element={<FacilityCourtsPage />} />
             <Route path="/profile" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />

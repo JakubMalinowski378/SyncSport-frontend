@@ -152,6 +152,11 @@ export default function HomePage() {
                       This facility is available for booking. Browse and book courts seamlessly!
                     </Card.Text>
                   </Card.Body>
+                  <Card.Footer className="bg-transparent border-0 text-end">
+                    <Link to={`/facility/${facility.id}`} className="btn btn-outline-primary btn-sm">
+                      View Courts
+                    </Link>
+                  </Card.Footer>
                 </Card>
               </Col>
             ))}
