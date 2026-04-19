@@ -11,16 +11,16 @@ export default function AdminDashboardPage() {
           <h4 className="fw-bold mb-4">Admin Panel</h4>
           <Nav className="flex-column nav-pills gap-2">
             <Nav.Item>
-              <Nav.Link as={NavLink} to="/admin/users" 
-                        className={({ isActive }) => `rounded-3 ${isActive ? 'active' : 'text-body'}`}>
+              <NavLink to="/admin/users" 
+                       className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                 User Management
-              </Nav.Link>
+              </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <Nav.Link as={NavLink} to="/admin/facilities" 
-                        className={({ isActive }) => `rounded-3 ${isActive ? 'active' : 'text-body'}`}>
+              <NavLink to="/admin/facilities" 
+                       className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                 Facility Management
-              </Nav.Link>
+              </NavLink>
             </Nav.Item>
           </Nav>
         </Col>

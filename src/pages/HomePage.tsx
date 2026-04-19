@@ -1,8 +1,58 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Form, Button, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
 import { useAuth } from '../hooks/useAuth';
+import apiClient from '../services/apiClient';
+
+interface Facility {
+  id: string;
+  name: string | null;
+  address: string | null;
+}
+
+interface GetFacilitiesResponsePagedResult {
+  items: Facility[] | null;
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
 
 export default function HomePage() {
   const { user, logout } = useAuth();
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchFacilities = async (search: string = '') => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await apiClient.get<GetFacilitiesResponsePagedResult>('/api/facilities', {
+        params: { 
+          PageNumber: 1, 
+          PageSize: 15,
+          SearchTerm: search || undefined
+        }
+      });
+      setFacilities(res.data.items || []);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to fetch facilities');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchFacilities();
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchFacilities(searchTerm);
+  };
   
   return (
     <div className="container mt-5">
@@ -68,6 +118,46 @@ export default function HomePage() {
           </div>
         </div>
       )}
+
+      <div className="mt-5 mb-5 align-items-center d-flex flex-column">
+        <h2 className="mb-4">Explore Facilities</h2>
+        <Form onSubmit={handleSearch} className="d-flex w-100 mb-4" style={{ maxWidth: '600px' }}>
+          <Form.Control
+            type="search"
+            placeholder="Search by name or address..."
+            className="me-2"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            disabled={loading}
+          />
+          <Button variant="primary" type="submit" disabled={loading}>
+            {loading ? <Spinner size="sm" /> : 'Search'}
+          </Button>
+        </Form>
+        
+        <div className="w-100">
+          {error && <Alert variant="danger">{error}</Alert>}
+          {!loading && facilities.length === 0 && !error && (
+            <p className="text-secondary text-center">No facilities found. Try adjusting your search.</p>
+          )}
+          
+          <Row xs={1} md={2} lg={3} className="g-4">
+            {facilities.map(facility => (
+              <Col key={facility.id}>
+                <Card className="h-100 shadow-sm border-secondary">
+                  <Card.Body>
+                    <Card.Title>{facility.name || 'Unnamed Facility'}</Card.Title>
+                    <Card.Subtitle className="mb-2 text-muted small">{facility.address || 'No address provided'}</Card.Subtitle>
+                    <Card.Text className="mt-3">
+                      This facility is available for booking. Browse and book courts seamlessly!
+                    </Card.Text>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </div>
     </div>
   );
 }
