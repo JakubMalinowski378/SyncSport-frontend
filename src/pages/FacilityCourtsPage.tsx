@@ -20,6 +20,7 @@ interface Facility {
   id: string;
   name: string | null;
   address: string | null;
+  images?: string[] | null;
 }
 
 interface CourtAvailabilityDto {
@@ -157,9 +158,18 @@ export default function FacilityCourtsPage() {
   return (
     <Container className="py-4">
       <div className="mb-4 d-flex align-items-center justify-content-between">
-        <div>
-          <h2 className="fw-bold mb-1">{facility?.name || 'Facility'}</h2>
-          <p className="text-secondary mb-0">{facility?.address}</p>
+        <div className="d-flex align-items-center gap-3">
+          {facility?.images && facility.images.length > 0 && (
+            <img 
+              src={facility.images[0]} 
+              alt={facility.name || 'Facility'} 
+              style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px' }} 
+            />
+          )}
+          <div>
+            <h2 className="fw-bold mb-1">{facility?.name || 'Facility'}</h2>
+            <p className="text-secondary mb-0">{facility?.address}</p>
+          </div>
         </div>
         <Link to="/" className="btn btn-outline-secondary btn-sm">Back to Search</Link>
       </div>

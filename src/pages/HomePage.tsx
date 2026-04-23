@@ -8,6 +8,7 @@ interface Facility {
   id: string;
   name: string | null;
   address: string | null;
+  images?: string[] | null;
 }
 
 interface GetFacilitiesResponsePagedResult {
@@ -145,6 +146,14 @@ export default function HomePage() {
             {facilities.map(facility => (
               <Col key={facility.id}>
                 <Card className="h-100 shadow-sm border-secondary">
+                  {facility.images && facility.images.length > 0 && (
+                    <Card.Img 
+                      variant="top" 
+                      src={facility.images[0]} 
+                      alt={facility.name || 'Facility Image'} 
+                      style={{ height: '200px', objectFit: 'cover' }}
+                    />
+                  )}
                   <Card.Body>
                     <Card.Title>{facility.name || 'Unnamed Facility'}</Card.Title>
                     <Card.Subtitle className="mb-2 text-muted small">{facility.address || 'No address provided'}</Card.Subtitle>
