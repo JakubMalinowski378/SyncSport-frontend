@@ -36,6 +36,7 @@ const DAYS_OF_WEEK = [
 export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateFacilityModalProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [reservationDuration, setReservationDuration] = useState<number>(60);
   
   const [weeklyHours, setWeeklyHours] = useState<WeeklyHour[]>(
     DAYS_OF_WEEK.map(d => ({
@@ -47,6 +48,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
   );
 
   const [customDateHours, setCustomDateHours] = useState<CustomDateHour[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,21 +83,31 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
     setLoading(true);
     setError(null);
     try {
-      await apiClient.post('/api/facilities', {
-        name,
-        address,
-        weeklyHours: weeklyHours.map(w => ({
-          dayOfWeek: w.dayOfWeek,
-          openTime: formatTime(w.openTime),
-          closeTime: formatTime(w.closeTime),
-          isClosed: w.isClosed
-        })),
-        customDateHours: customDateHours.map(c => ({
-          date: c.date,
-          openTime: formatTime(c.openTime),
-          closeTime: formatTime(c.closeTime),
-          isClosed: c.isClosed
-        }))
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('address', address);
+      formData.append('reservationDuration', String(reservationDuration));
+      formData.append('weeklyHours', JSON.stringify(weeklyHours.map(w => ({
+        dayOfWeek: w.dayOfWeek,
+        openTime: formatTime(w.openTime),
+        closeTime: formatTime(w.closeTime),
+        isClosed: w.isClosed
+      }))));
+      formData.append('customDateHours', JSON.stringify(customDateHours.map(c => ({
+        date: c.date,
+        openTime: formatTime(c.openTime),
+        closeTime: formatTime(c.closeTime),
+        isClosed: c.isClosed
+      }))));
+      
+      images.forEach(img => {
+        formData.append('images', img);
+      });
+
+      await apiClient.post('/api/facilities', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       onSuccess();
       onHide();
@@ -109,6 +121,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
   const handleExited = () => {
     setName('');
     setAddress('');
+    setReservationDuration(60);
     setWeeklyHours(DAYS_OF_WEEK.map(d => ({
       dayOfWeek: d.value,
       openTime: '08:00',
@@ -116,7 +129,18 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
       isClosed: false
     })));
     setCustomDateHours([]);
+    setImages([]);
     setError(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -153,7 +177,54 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
                 />
               </Form.Group>
             </Col>
+            <Col md={12} className="mt-3">
+              <Form.Group>
+                <Form.Label>Reservation Duration (minutes)</Form.Label>
+                <Form.Control
+                  type="number"
+                  required
+                  min="1"
+                  value={reservationDuration}
+                  onChange={e => setReservationDuration(parseInt(e.target.value) || 60)}
+                  className="bg-card text-body border-secondary"
+                />
+              </Form.Group>
+            </Col>
           </Row>
+
+              <Form.Group className="mb-3">
+            <Form.Label>Facility Images</Form.Label>
+            <Form.Control
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="bg-card text-body border-secondary"
+            />
+            {images.length > 0 && (
+              <div className="d-flex flex-wrap gap-2 mt-2">
+                {images.map((img, idx) => (
+                  <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt={`preview-${idx}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="position-absolute top-0 end-0 p-0"
+                      style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
+                      title="Remove image"
+                      onClick={() => removeImage(idx)}
+                    >
+                      &times;
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Form.Group>
 
           <Card className="mb-3 bg-card border-secondary">
             <Card.Header className="border-secondary fw-bold">Weekly Hours</Card.Header>

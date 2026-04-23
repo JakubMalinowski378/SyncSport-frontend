@@ -12,6 +12,8 @@ interface CreateCourtModalProps {
 export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }: CreateCourtModalProps) {
   const [name, setName] = useState('');
   const [surfaceType, setSurfaceType] = useState('');
+  const [overrideReservationDuration, setOverrideReservationDuration] = useState<number | ''>('');
+  const [images, setImages] = useState<File[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,10 +23,19 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
     setLoading(true);
     setError(null);
     try {
-      await apiClient.post(`/api/facilities/${facilityId}/courts`, {
-        facilityId,
-        name,
-        surfaceType
+      const formData = new FormData();
+      formData.append('facilityId', facilityId);
+      formData.append('name', name);
+      formData.append('surfaceType', surfaceType);
+      
+      if (overrideReservationDuration !== '') {
+        formData.append('overrideReservationDuration', String(overrideReservationDuration));
+      }
+
+      images.forEach(img => formData.append('images', img));
+
+      await apiClient.post(`/api/facilities/${facilityId}/courts`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
       onSuccess();
       onHide();
@@ -38,7 +49,19 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
   const handleExited = () => {
     setName('');
     setSurfaceType('');
+    setOverrideReservationDuration('');
+    setImages([]);
     setError(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -70,6 +93,52 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
               onChange={e => setSurfaceType(e.target.value)}
               className="bg-card text-body border-secondary"
             />
+          </Form.Group>
+
+          <Form.Group className="mb-3">
+            <Form.Label>Override Reservation Duration (minutes)</Form.Label>
+            <Form.Control
+              type="number"
+              min="1"
+              value={overrideReservationDuration}
+              onChange={e => setOverrideReservationDuration(e.target.value ? parseInt(e.target.value) : '')}
+              placeholder="Leave empty to use facility's duration"
+              className="bg-card text-body border-secondary"
+            />
+          </Form.Group>
+          
+          <Form.Group className="mb-3">
+            <Form.Label>Court Images</Form.Label>
+            <Form.Control
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              className="bg-card text-body border-secondary"
+            />
+            {images.length > 0 && (
+              <div className="d-flex flex-wrap gap-2 mt-2">
+                {images.map((img, idx) => (
+                  <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
+                    <img
+                      src={URL.createObjectURL(img)}
+                      alt={`preview-${idx}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      className="position-absolute top-0 end-0 p-0"
+                      style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
+                      title="Remove image"
+                      onClick={() => removeImage(idx)}
+                    >
+                      &times;
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </Form.Group>
         </Modal.Body>
         <Modal.Footer className="bg-card border-secondary">

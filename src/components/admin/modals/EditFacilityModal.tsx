@@ -37,6 +37,7 @@ const DAYS_OF_WEEK = [
 export default function EditFacilityModal({ show, onHide, onSuccess, facility }: EditFacilityModalProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [reservationDuration, setReservationDuration] = useState<number>(60);
   
   const [openingHours, setOpeningHours] = useState<OpeningHour[]>(
     DAYS_OF_WEEK.map(dayName => ({
@@ -48,6 +49,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
   );
 
   const [customDateHours, setCustomDateHours] = useState<CustomDateHour[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   
   const [initialLoading, setInitialLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -60,6 +62,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       const data = res.data;
       setName(data.name || '');
       setAddress(data.address || '');
+      setReservationDuration(data.reservationDuration || 60);
       
       if (data.openingHours && data.openingHours.length > 0) {
         setOpeningHours(DAYS_OF_WEEK.map(day => {
@@ -132,22 +135,32 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
     setLoading(true);
     setError(null);
     try {
-      await apiClient.put(`/api/facilities/${facility.id}`, {
-        id: facility.id,
-        name,
-        address,
-        openingHours: openingHours.map(w => ({
-          dayName: w.dayName,
-          openTime: formatTime(w.openTime),
-          closeTime: formatTime(w.closeTime),
-          isClosed: w.isClosed
-        })),
-        customDateHours: customDateHours.map(c => ({
-          date: c.date,
-          openTime: formatTime(c.openTime),
-          closeTime: formatTime(c.closeTime),
-          isClosed: c.isClosed
-        }))
+      const formData = new FormData();
+      formData.append('id', facility.id);
+      formData.append('name', name);
+      formData.append('address', address);
+      formData.append('reservationDuration', String(reservationDuration));
+      formData.append('openingHours', JSON.stringify(openingHours.map(w => ({
+        dayName: w.dayName,
+        openTime: formatTime(w.openTime),
+        closeTime: formatTime(w.closeTime),
+        isClosed: w.isClosed
+      }))));
+      formData.append('customDateHours', JSON.stringify(customDateHours.map(c => ({
+        date: c.date,
+        openTime: formatTime(c.openTime),
+        closeTime: formatTime(c.closeTime),
+        isClosed: c.isClosed
+      }))));
+
+      images.forEach(img => {
+        formData.append('images', img);
+      });
+
+      await apiClient.put(`/api/facilities/${facility.id}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       onSuccess();
       onHide();
@@ -161,6 +174,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
   const handleExited = () => {
     setName('');
     setAddress('');
+    setReservationDuration(60);
     setOpeningHours(DAYS_OF_WEEK.map(dayName => ({
       dayName,
       openTime: '08:00',
@@ -168,7 +182,18 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       isClosed: false
     })));
     setCustomDateHours([]);
+    setImages([]);
     setError(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -209,7 +234,54 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                     />
                   </Form.Group>
                 </Col>
+                <Col md={12} className="mt-3">
+                  <Form.Group>
+                    <Form.Label>Reservation Duration (minutes)</Form.Label>
+                    <Form.Control
+                      type="number"
+                      required
+                      min="1"
+                      value={reservationDuration}
+                      onChange={e => setReservationDuration(parseInt(e.target.value) || 60)}
+                      className="bg-card text-body border-secondary"
+                    />
+                  </Form.Group>
+                </Col>
               </Row>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Facility Images</Form.Label>
+                <Form.Control
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="bg-card text-body border-secondary"
+                />
+                {images.length > 0 && (
+                  <div className="d-flex flex-wrap gap-2 mt-2">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt={`preview-${idx}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          className="position-absolute top-0 end-0 p-0"
+                          style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
+                          title="Remove image"
+                          onClick={() => removeImage(idx)}
+                        >
+                          &times;
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Form.Group>
 
               <Card className="bg-card border-secondary text-body mb-3 mt-3">
                 <Card.Header className="bg-card border-secondary fw-bold text-body">Opening Hours</Card.Header>
