@@ -78,7 +78,7 @@ export default function LoginPage() {
                 <div className="mb-4">
                   <div className="d-flex justify-content-between align-items-center">
                     <label htmlFor="passwordInput" className="form-label mb-0">Hasło</label>
-                    <Link to="/forgot-password" className="text-decoration-none small">Zapomniałeś hasła?</Link>
+                    <Link to="/zapomniane-haslo" className="text-decoration-none small">Zapomniałeś hasła?</Link>
                   </div>
                   <PasswordInput 
                     className="mt-2" 
@@ -100,7 +100,7 @@ export default function LoginPage() {
 
                 <div className="text-center">
                   <span className="text-muted">Nie masz konta? </span>
-                  <Link to="/register" className="text-decoration-none">Utwórz konto</Link>
+                  <Link to="/rejestracja" className="text-decoration-none">Utwórz konto</Link>
                 </div>
               </form>
             </div>

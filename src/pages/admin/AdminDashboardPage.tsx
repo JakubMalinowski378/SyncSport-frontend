@@ -11,13 +11,13 @@ export default function AdminDashboardPage() {
           <h4 className="fw-bold mb-4">Panel administracyjny</h4>
           <Nav className="flex-column nav-pills gap-2">
             <Nav.Item>
-              <NavLink to="/admin/users" 
+              <NavLink to="/panel-admina/uzytkownicy" 
                        className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                 Zarządzanie użytkownikami
               </NavLink>
             </Nav.Item>
             <Nav.Item>
-              <NavLink to="/admin/facilities" 
+              <NavLink to="/panel-admina/obiekty" 
                        className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                 Zarządzanie obiektami
               </NavLink>
@@ -27,9 +27,9 @@ export default function AdminDashboardPage() {
 
         <Col md={9} lg={10}>
           <Routes>
-            <Route path="/" element={<Navigate to="/admin/users" replace />} />
-            <Route path="users" element={<UserManagement />} />
-            <Route path="facilities" element={<FacilityManagement />} />
+            <Route path="/" element={<Navigate to="/panel-admina/uzytkownicy" replace />} />
+            <Route path="uzytkownicy" element={<UserManagement />} />
+            <Route path="obiekty" element={<FacilityManagement />} />
           </Routes>
         </Col>
       </Row>

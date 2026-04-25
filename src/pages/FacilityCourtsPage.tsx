@@ -99,7 +99,7 @@ export default function FacilityCourtsPage() {
 
   const handleBookClick = (court: Court, time: string) => {
     if (!user) {
-      navigate('/login');
+      navigate('/logowanie');
       return;
     }
     setBookingCourt(court);

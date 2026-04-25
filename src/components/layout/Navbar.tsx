@@ -23,14 +23,14 @@ export default function AppNavbar() {
               <BsCalendar3 aria-hidden="true" />
               <span>Strona główna</span>
             </Nav.Link>
-            <Nav.Link as={NavLink} to="/about" className="d-flex align-items-center gap-2">
+            <Nav.Link as={NavLink} to="/o-nas" className="d-flex align-items-center gap-2">
               <BsBuilding aria-hidden="true" />
               <span>Obiekty</span>
             </Nav.Link>
             {user
               ? <>
                   {user.role === UserRole.Admin && (
-                    <Nav.Link as={NavLink} to="/admin">Panel administratora</Nav.Link>
+                    <Nav.Link as={NavLink} to="/panel-admina">Panel administratora</Nav.Link>
                   )}
                   <NavDropdown
                     title={
@@ -43,7 +43,7 @@ export default function AppNavbar() {
                     id="account-dropdown"
                     align="end"
                   >
-                    <Dropdown.Item as={Link} to="/profile" className="d-flex align-items-center gap-2">
+                    <Dropdown.Item as={Link} to="/profil" className="d-flex align-items-center gap-2">
                       <BsPersonCircle size={16} />
                       <span>Profil</span>
                     </Dropdown.Item>
@@ -55,8 +55,8 @@ export default function AppNavbar() {
                   </NavDropdown>
                 </>
               : <>
-                  <Nav.Link as={NavLink} to="/login">Zaloguj się</Nav.Link>
-                  <Nav.Link as={NavLink} to="/register">Utwórz konto</Nav.Link>
+                  <Nav.Link as={NavLink} to="/logowanie">Zaloguj się</Nav.Link>
+                  <Nav.Link as={NavLink} to="/rejestracja">Utwórz konto</Nav.Link>
                 </>
             }
             <Button

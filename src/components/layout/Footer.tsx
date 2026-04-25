@@ -24,8 +24,8 @@ export default function AppFooter() {
             <h6 className="fw-bold">Szybkie linki</h6>
             <ul className="list-unstyled small mb-0">
               <li><a href="/" className="footer-link text-secondary-emphasis">Znajdź kort</a></li>
-              <li><a href="/register" className="footer-link text-secondary-emphasis">Członkostwo</a></li>
-              <li><a href="/about" className="footer-link text-secondary-emphasis">Anulowanie</a></li>
+              <li><a href="/rejestracja" className="footer-link text-secondary-emphasis">Członkostwo</a></li>
+              <li><a href="/o-nas" className="footer-link text-secondary-emphasis">Anulowanie</a></li>
             </ul>
           </div>
           <div className="col-md-3 col-lg-3">

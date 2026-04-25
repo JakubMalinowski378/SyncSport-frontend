@@ -40,7 +40,7 @@ export default function ResetPasswordPage() {
 
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/login');
+        navigate('/logowanie');
       }, 3000);
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.title) {
@@ -106,7 +106,7 @@ export default function ResetPasswordPage() {
                   </button>
 
                   <div className="text-center">
-                    <Link to="/login" className="text-decoration-none">Wróć do logowania</Link>
+                    <Link to="/logowanie" className="text-decoration-none">Wróć do logowania</Link>
                   </div>
                 </form>
               )}

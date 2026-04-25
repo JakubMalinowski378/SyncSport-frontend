@@ -256,7 +256,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="mt-3 d-grid">
-                        <Link to={`/facility/${encodeURIComponent(facility.slug || facility.id)}`} className="btn btn-outline-primary rounded-pill">
+                        <Link to={`/obiekt/${encodeURIComponent(facility.slug || facility.id)}`} className="btn btn-outline-primary rounded-pill">
                           <BsCalendarCheck className="me-1" /> Sprawdź dostępność
                         </Link>
                       </div>

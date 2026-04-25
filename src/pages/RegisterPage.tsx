@@ -37,7 +37,7 @@ export default function RegisterPage() {
 
       setIsSuccess(true);
       setTimeout(() => {
-        navigate('/login');
+        navigate('/logowanie');
       }, 2000);
     } catch (err: any) {
       if (err.response && err.response.data && err.response.data.title) {
@@ -143,7 +143,7 @@ export default function RegisterPage() {
                 
                 <div className="text-center">
                   <span className="text-muted">Masz już konto? </span>
-                  <Link to="/login" className="text-decoration-none">Zaloguj się</Link>
+                  <Link to="/logowanie" className="text-decoration-none">Zaloguj się</Link>
                 </div>
               </form>
             </div>

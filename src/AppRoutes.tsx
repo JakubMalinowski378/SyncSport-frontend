@@ -29,16 +29,16 @@ export default function AppRoutes() {
         <main className="flex-grow-1">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/facility/:slug" element={<FacilityCourtsPage />} />
-            <Route path="/profile" element={
+            <Route path="/o-nas" element={<About />} />
+            <Route path="/logowanie" element={<LoginPage />} />
+            <Route path="/rejestracja" element={<RegisterPage />} />
+            <Route path="/zapomniane-haslo" element={<ForgotPasswordPage />} />
+            <Route path="/reset-hasla" element={<ResetPasswordPage />} />
+            <Route path="/obiekt/:slug" element={<FacilityCourtsPage />} />
+            <Route path="/profil" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
-            <Route path="/admin/*" element={
+            <Route path="/panel-admina/*" element={
               <PrivateRoute><AdminDashboardPage /></PrivateRoute>
             } />
           </Routes>
