@@ -58,7 +58,7 @@ export default function FacilityManagement() {
       setFacilities(res.data.items || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch facilities');
+      setError(err.response?.data?.detail || 'Nie udało się załadować obiekty');
     } finally {
       setLoading(false);
     }
@@ -95,13 +95,13 @@ export default function FacilityManagement() {
   return (
     <Card className="bg-card w-100 border-secondary">
       <Card.Header className="d-flex justify-content-between align-items-center bg-card border-secondary">
-        <h5 className="mb-0 fw-bold">Facility Management</h5>
+        <h5 className="mb-0 fw-bold">Zarządzanie obiektami</h5>
         <div>
           <Button variant="success" size="sm" className="me-2" onClick={() => setShowCreateModal(true)}>
-            Add Facility
+            Dodaj obiekt
           </Button>
           <Button variant="outline-primary" size="sm" onClick={fetchFacilities} disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Refresh'}
+            {loading ? <Spinner size="sm" /> : 'Odśwież'}
           </Button>
         </div>
       </Card.Header>
@@ -131,19 +131,19 @@ export default function FacilityManagement() {
             <tr>
               <th>ID</th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Name')}>
-                Name {sortColumn === 'Name' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
+                Nazwa {sortColumn === 'Name' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Address')}>
-                Address {sortColumn === 'Address' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
+                Adres {sortColumn === 'Address' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
-              <th className="text-end">Actions</th>
+              <th className="text-end">Akcje</th>
             </tr>
           </thead>
           <tbody>
             {loading && facilities.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-4"><Spinner /></td></tr>
             ) : facilities.length === 0 ? (
-              <tr><td colSpan={4} className="text-center py-4 text-secondary">No facilities found.</td></tr>
+              <tr><td colSpan={4} className="text-center py-4 text-secondary">Nie znaleziono obiektów.</td></tr>
             ) : (
               facilities.map(f => (
                 <React.Fragment key={f.id}>
@@ -155,7 +155,7 @@ export default function FacilityManagement() {
                       <Button 
                         variant="outline-primary" 
                         size="sm" 
-                        title="Edit"
+                        title="Edytuj"
                         className="me-2"
                         onClick={() => {
                           setSelectedFacility(f);
@@ -167,7 +167,7 @@ export default function FacilityManagement() {
                       <Button 
                         variant="outline-danger" 
                         size="sm" 
-                        title="Delete"
+                        title="Usuń"
                         onClick={() => {
                           setSelectedFacility(f);
                           setShowDeleteModal(true);
@@ -194,7 +194,7 @@ export default function FacilityManagement() {
           <div className="d-flex justify-content-center mt-3">
             <Pagination className="mb-0">
               <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || loading} />
-              <Pagination.Item disabled>{pageNumber} of {totalPages}</Pagination.Item>
+              <Pagination.Item disabled>{pageNumber} z {totalPages}</Pagination.Item>
               <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || loading} />
             </Pagination>
           </div>

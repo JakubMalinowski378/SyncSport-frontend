@@ -20,9 +20,9 @@ export default function PasswordInput({ className, ...props }: PasswordInputProp
         type="button"
         onClick={() => setShowPassword(!showPassword)}
         tabIndex={-1}
-        aria-label={showPassword ? "Hide password" : "Show password"}
+        aria-label={showPassword ? "Ukryj hasło" : "Pokaż hasło"}
       >
-        {showPassword ? 'Hide' : 'Show'}
+        {showPassword ? 'Ukryj' : 'Pokaż'}
       </button>
     </div>
   );

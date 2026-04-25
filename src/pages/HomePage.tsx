@@ -13,9 +13,6 @@ import {
   BsClock,
   BsExclamationCircle,
   BsCalendarCheck,
-  BsGeoAlt,
-  BsTelephone,
-  BsEnvelope,
   BsCameraFill,
 } from 'react-icons/bs';
 import apiClient from '../services/apiClient';
@@ -69,7 +66,7 @@ export default function HomePage() {
       setFacilities(res.data.items || []);
       setTotalCount(res.data.totalCount || 0);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch facilities');
+      setError(err.response?.data?.detail || 'Nie udało się załadować obiekty');
     } finally {
       setLoading(false);
     }
@@ -84,6 +81,32 @@ export default function HomePage() {
       return '-';
     }
     return timeStr.substring(0, 5);
+  };
+
+  const getDayNamePL = (englishDayName?: string) => {
+    const dayMapping: { [key: string]: string } = {
+      'Monday': 'pon',
+      'Tuesday': 'wt',
+      'Wednesday': 'śr',
+      'Thursday': 'czw',
+      'Friday': 'pt',
+      'Saturday': 'sob',
+      'Sunday': 'ndz',
+    };
+    return dayMapping[englishDayName || ''] || englishDayName?.substring(0, 3) || '';
+  };
+
+  const getPluralForm = (count: number, singular: string, fewForm: string, manyForm: string) => {
+    const n = count % 100;
+    const n10 = count % 10;
+
+    if (n === 1) {
+      return singular;
+    } else if (n10 >= 2 && n10 <= 4 && (n < 10 || n > 20)) {
+      return fewForm;
+    } else {
+      return manyForm;
+    }
   };
 
   const getMainImageUrl = (images?: (string | FacilityImage)[] | null) => {
@@ -103,10 +126,10 @@ export default function HomePage() {
 
   const renderOpeningPreview = (openingHours?: OpeningHour[] | null) => {
     if (!openingHours || openingHours.length === 0) {
-      return <span className="text-muted small">No hours info</span>;
+      return <span className="text-muted small">Brak informacji o godzinach</span>;
     }
 
-    const daysToShow = openingHours.slice(0, 5);
+    const daysToShow = openingHours.slice(0, 7);
     const firstOpenDay = openingHours.find((day) => !day.isClosed);
 
     return (
@@ -117,23 +140,23 @@ export default function HomePage() {
               key={day.dayName}
               className={`day-badge me-1 mb-1 ${day.isClosed ? 'day-closed' : 'day-open'}`}
             >
-              {day.dayName.substring(0, 3)}
+              {getDayNamePL(day.dayName)}
             </span>
           ))}
-          {openingHours.length > 5 && (
-            <span className="day-badge bg-light text-secondary mb-1">+{openingHours.length - 5} more</span>
+          {openingHours.length > 7 && (
+            <span className="day-badge bg-light text-secondary mb-1">+{openingHours.length - 7} więcej</span>
           )}
         </div>
         <div className="mt-2 small text-secondary">
           {firstOpenDay ? (
             <>
               <BsClock className="me-1" />
-              e.g. {firstOpenDay.dayName}: {formatTime(firstOpenDay.openTime)}-{formatTime(firstOpenDay.closeTime)}
+              np. {getDayNamePL(firstOpenDay.dayName)}: {formatTime(firstOpenDay.openTime)}-{formatTime(firstOpenDay.closeTime)}
             </>
           ) : (
             <span className="text-danger">
               <BsExclamationCircle className="me-1" />
-              Temporarily closed all week
+              Czasowo zamknięte przez cały tydzień
             </span>
           )}
         </div>
@@ -148,17 +171,17 @@ export default function HomePage() {
           <Col md={8}>
             <h1 className="display-5 fw-bold mb-3 d-flex align-items-center gap-2">
               <BsTrophyFill className="text-warning" />
-              <span>sport.courts</span>
+              <span>SyncSport</span>
             </h1>
             <p className="lead fs-5 text-secondary">
-              Find and reserve indoor and outdoor courts in your city. Real-time availability, flexible hours, and premium facilities.
+              Znajdź i zarezerwuj halę sportową w swoim mieście. Dostępność w czasie rzeczywistym, elastyczne godziny i obiekty premium.
             </p>
             <div className="d-flex flex-wrap gap-3 mt-3">
               <Badge bg="success" className="bg-opacity-10 text-success rounded-pill px-3 py-2 fw-medium">
-                <BsCheckCircle className="me-1" /> Verified facilities
+                <BsCheckCircle className="me-1" /> Obiekty zweryfikowane
               </Badge>
               <Badge bg="info" className="bg-opacity-10 text-info rounded-pill px-3 py-2 fw-medium">
-                <BsClockHistory className="me-1" /> Real-time slots
+                <BsClockHistory className="me-1" /> Miejsca w czasie rzeczywistym
               </Badge>
             </div>
           </Col>
@@ -171,10 +194,10 @@ export default function HomePage() {
       <section>
         <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
           <h2 className="h3 fw-semibold mb-0 d-flex align-items-center gap-2">
-            <BsBuilding /> All facilities
+            <BsBuilding /> Wszystkie obiekty
           </h2>
           <span className="badge bg-secondary bg-opacity-25 text-dark rounded-pill px-3 py-2">
-            <BsBuilding className="me-1" /> {loading ? 'Loading facilities...' : `${totalCount || facilities.length} facilities`}
+            <BsBuilding className="me-1" /> {loading ? 'Ładowanie obiektów...' : `${totalCount || facilities.length} ${getPluralForm(totalCount || facilities.length, 'obiekt', 'obiekty', 'obiektów')}`}
           </span>
         </div>
 
@@ -185,12 +208,12 @@ export default function HomePage() {
             <Spinner animation="border" className="text-primary" />
           </div>
         ) : facilities.length === 0 ? (
-          <Alert variant="light" className="text-center py-5">No facilities available at the moment.</Alert>
+          <Alert variant="light" className="text-center py-5">W tej chwili nie ma dostępnych obiektów.</Alert>
         ) : (
           <Row className="g-4">
             {facilities.map((facility) => {
               const imageUrl = getMainImageUrl(facility.images);
-              const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} min slots` : 'Flexible slots';
+              const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} min rezerwacji` : 'Elastyczne sloty';
 
               return (
                 <Col key={facility.id} md={6} lg={4}>
@@ -207,33 +230,33 @@ export default function HomePage() {
                     ) : (
                       <div className="card-img-top d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
                         <BsCameraFill className="fs-1 text-secondary" />
-                        <span className="ms-2 small">No image</span>
+                        <span className="ms-2 small">Brak obrazu</span>
                       </div>
                     )}
 
                     <Card.Body className="d-flex flex-column">
                       <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
-                        <h5 className="card-title fw-bold fs-5 mb-0">{facility.name || 'Unnamed facility'}</h5>
+                        <h5 className="card-title fw-bold fs-5 mb-0">{facility.name || 'Obiekt bez nazwy'}</h5>
                         <span className="badge-duration rounded-pill">
                           <BsHourglassSplit className="me-1" /> {durationLabel}
                         </span>
                       </div>
 
                       <div className="mb-2 text-secondary small">
-                        <BsGeoAltFill className="me-1" /> {facility.address || 'No address provided'}
+                        <BsGeoAltFill className="me-1" /> {facility.address || 'Adres nie podany'}
                       </div>
 
                       <div className="mt-2">
                         <div className="d-flex align-items-center gap-1 mb-1">
                           <BsCalendarWeek className="text-primary" />
-                          <span className="small fw-semibold">Opening schedule</span>
+                          <span className="small fw-semibold">Harmonogram otwarcia</span>
                         </div>
                         {renderOpeningPreview(facility.openingHours)}
                       </div>
 
                       <div className="mt-3 d-grid">
                         <Link to={`/facility/${facility.id}`} className="btn btn-outline-primary rounded-pill">
-                          <BsCalendarCheck className="me-1" /> Check availability
+                          <BsCalendarCheck className="me-1" /> Sprawdź dostępność
                         </Link>
                       </div>
                     </Card.Body>
@@ -243,23 +266,6 @@ export default function HomePage() {
             })}
           </Row>
         )}
-      </section>
-
-      <section className="mt-5 pt-4 border-top text-center text-secondary">
-        <Row>
-          <Col md={6} className="text-md-start mb-3 mb-md-0">
-            <BsGeoAlt className="text-primary me-1" /> Green Meadows Sports District
-          </Col>
-          <Col md={6} className="text-md-end">
-            <span className="me-3 d-inline-block">
-              <BsTelephone className="me-1" /> +48 22 123 45 67
-            </span>
-            <span className="d-inline-block">
-              <BsEnvelope className="me-1" /> booking@sportcourts.com
-            </span>
-          </Col>
-        </Row>
-        <div className="mt-3 small">© 2025 SportCourts - smart facility reservation system</div>
       </section>
     </main>
   );

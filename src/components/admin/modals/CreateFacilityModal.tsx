@@ -112,7 +112,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create facility');
+      setError(err.response?.data?.detail || 'Nie udało się utworzyć obiektu');
     } finally {
       setLoading(false);
     }
@@ -147,7 +147,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
     <Modal show={show} onHide={onHide} onExited={handleExited} size="lg" centered>
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton className="bg-card border-secondary">
-          <Modal.Title>Create New Facility</Modal.Title>
+          <Modal.Title>Utwórz nowy obiekt</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}
@@ -155,7 +155,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
           <Row className="mb-3">
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Name</Form.Label>
+                <Form.Label>Nazwa</Form.Label>
                 <Form.Control
                   type="text"
                   required
@@ -167,7 +167,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
             </Col>
             <Col md={6}>
               <Form.Group>
-                <Form.Label>Address</Form.Label>
+                <Form.Label>Adres</Form.Label>
                 <Form.Control
                   type="text"
                   required
@@ -179,7 +179,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
             </Col>
             <Col md={12} className="mt-3">
               <Form.Group>
-                <Form.Label>Reservation Duration (minutes)</Form.Label>
+                <Form.Label>Czas rezerwacji (minuty)</Form.Label>
                 <Form.Control
                   type="number"
                   required
@@ -193,7 +193,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
           </Row>
 
               <Form.Group className="mb-3">
-            <Form.Label>Facility Images</Form.Label>
+            <Form.Label>Zdjęcia obiektu</Form.Label>
             <Form.Control
               type="file"
               multiple
@@ -215,7 +215,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
                       size="sm"
                       className="position-absolute top-0 end-0 p-0"
                       style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
-                      title="Remove image"
+                      title="Usuń zdjęcie"
                       onClick={() => removeImage(idx)}
                     >
                       &times;
@@ -227,7 +227,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
           </Form.Group>
 
           <Card className="mb-3 bg-card border-secondary">
-            <Card.Header className="border-secondary fw-bold">Weekly Hours</Card.Header>
+            <Card.Header className="border-secondary fw-bold">Godziny tygodniowe</Card.Header>
             <Card.Body>
               {weeklyHours.map((wh, idx) => (
                 <Row key={wh.dayOfWeek} className="align-items-center mb-2">
@@ -237,7 +237,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
                   <Col xs={4} md={3}>
                     <Form.Check 
                       type="switch"
-                      label="Closed"
+                      label="Zamknięte"
                       checked={wh.isClosed}
                       onChange={e => handleWeeklyHourChange(idx, 'isClosed', e.target.checked)}
                     />
@@ -267,12 +267,12 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
 
           <Card className="bg-card border-secondary">
             <Card.Header className="d-flex justify-content-between align-items-center border-secondary fw-bold">
-              Custom Date Overrides
-              <Button variant="outline-primary" size="sm" onClick={addCustomDate}>+ Add Date</Button>
+              Przesunięcia dat niestandardowych
+              <Button variant="outline-primary" size="sm" onClick={addCustomDate}>+ Dodaj datę</Button>
             </Card.Header>
             <Card.Body>
               {customDateHours.length === 0 ? (
-                <p className="text-secondary small mb-0">No overrides added.</p>
+                <p className="text-secondary small mb-0">Brak przesunięć.</p>
               ) : (
                 customDateHours.map((cd, idx) => (
                   <Row key={idx} className="align-items-center mb-3">
@@ -328,7 +328,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
             Cancel
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? <Spinner animation="border" size="sm" /> : 'Create'}
+            {loading ? <Spinner animation="border" size="sm" /> : 'Utwórz'}
           </Button>
         </Modal.Footer>
       </Form>

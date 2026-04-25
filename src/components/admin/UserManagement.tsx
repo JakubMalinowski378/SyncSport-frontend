@@ -64,7 +64,7 @@ export default function UserManagement() {
       setUsers(res.data.items || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch users');
+      setError(err.response?.data?.detail || 'Nie udało się załadować użytkowników');
     } finally {
       setLoading(false);
     }
@@ -106,9 +106,9 @@ export default function UserManagement() {
   return (
     <Card className="bg-card w-100 border-secondary">
       <Card.Header className="d-flex justify-content-between align-items-center bg-card border-secondary">
-        <h5 className="mb-0 fw-bold">User Management</h5>
+        <h5 className="mb-0 fw-bold">Zarządzanie użytkownikami</h5>
         <Button variant="outline-primary" size="sm" onClick={fetchUsers} disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Refresh'}
+          {loading ? <Spinner size="sm" /> : 'Odśwież'}
         </Button>
       </Card.Header>
       
@@ -118,14 +118,14 @@ export default function UserManagement() {
             <Col xs={12} sm={8} md={6} lg={4}>
               <Form.Control
                 type="text"
-                placeholder="Search..."
+                placeholder="Szukaj..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="bg-card text-body border-secondary"
               />
             </Col>
             <Col xs="auto">
-              <Button type="submit" variant="primary" disabled={loading}>Search</Button>
+              <Button type="submit" variant="primary" disabled={loading}>Szukaj</Button>
             </Col>
           </Row>
         </Form>
@@ -137,21 +137,21 @@ export default function UserManagement() {
             <tr>
               <th>ID</th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('FirstName')}>
-                Name {sortColumn === 'FirstName' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
+                Imię {sortColumn === 'FirstName' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
               <th style={{ cursor: 'pointer' }} onClick={() => handleSortChange('Email')}>
-                Email {sortColumn === 'Email' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
+                E-mail {sortColumn === 'Email' && (sortOrder === 'asc' ? <BsArrowUp className="ms-1" /> : <BsArrowDown className="ms-1" />)}
               </th>
-              <th>Role</th>
+              <th>Rola</th>
               <th>Status</th>
-              <th className="text-end">Actions</th>
+              <th className="text-end">Akcje</th>
             </tr>
           </thead>
           <tbody>
             {loading && users.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-4"><Spinner /></td></tr>
             ) : users.length === 0 ? (
-              <tr><td colSpan={6} className="text-center py-4 text-secondary">No users found.</td></tr>
+              <tr><td colSpan={6} className="text-center py-4 text-secondary">Nie znaleziono użytkowników.</td></tr>
             ) : (
               users.map(u => (
                 <tr key={u.id}>
@@ -169,7 +169,7 @@ export default function UserManagement() {
                         size="sm"
                         className="ms-2 p-0 text-decoration-none"
                         onClick={() => openFacilitiesModal(u)}
-                        title="View Managed Facilities"
+                        title="Wyświetl zarządzane obiekty"
                       >
                         <BsListCheck size={18} />
                       </Button>
@@ -177,12 +177,12 @@ export default function UserManagement() {
                   </td>
                   <td>
                      <span className={`badge ${u.isActive ? 'bg-success' : 'bg-secondary'}`}>
-                      {u.isActive ? 'Active' : 'Inactive'}
+                      {u.isActive ? 'Aktywny' : 'Nieaktywny'}
                     </span>
                   </td>
                   <td className="text-end">
                     <Button variant="outline-info" size="sm" className="me-2" onClick={() => openRoleModal(u)}>
-                      Role
+                      Rola
                     </Button>
                     <Button 
                       variant={u.isActive ? "outline-warning" : "outline-success"} 
@@ -190,10 +190,10 @@ export default function UserManagement() {
                       className="me-2"
                       onClick={() => { setUserToDisable(u); setShowDisableModal(true); }}
                     >
-                      {u.isActive ? 'Disable' : 'Enable'}
+                      {u.isActive ? 'Dezaktywuj' : 'Aktywuj'}
                     </Button>
                     <Button variant="outline-danger" size="sm" onClick={() => { setUserToDelete(u); setShowDeleteModal(true); }}>
-                      Delete
+                      Usuń
                     </Button>
                   </td>
                 </tr>
@@ -206,7 +206,7 @@ export default function UserManagement() {
           <div className="d-flex justify-content-center mt-3">
             <Pagination className="mb-0">
               <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || loading} />
-              <Pagination.Item disabled>{pageNumber} of {totalPages}</Pagination.Item>
+              <Pagination.Item disabled>{pageNumber} z {totalPages}</Pagination.Item>
               <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || loading} />
             </Pagination>
           </div>

@@ -1,9 +1,9 @@
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button, NavDropdown, Dropdown } from 'react-bootstrap';
 import { Link, NavLink } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth }  from '../../hooks/useAuth';
 import { UserRole } from '../../context/AuthContext';
-import { BsTrophyFill, BsCalendar3, BsBuilding, BsHeadset, BsMoonStars, BsSun, BsPersonCircle } from 'react-icons/bs';
+import { BsTrophyFill, BsCalendar3, BsBuilding, BsHeadset, BsMoonStars, BsSun, BsPersonCircle, BsBoxArrowRight, BsChevronDown } from 'react-icons/bs';
 
 export default function AppNavbar() {
   const { theme, toggleTheme } = useTheme();
@@ -15,34 +15,48 @@ export default function AppNavbar() {
         <Navbar.Brand as={Link} to="/" className="fw-bold d-flex align-items-center gap-2">
           <BsTrophyFill className="text-warning fs-4" aria-hidden="true" />
           <span className="fs-4">SyncSport</span>
-          <small className="text-secondary-emphasis d-none d-sm-inline">| smart booking</small>
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="main-nav" />
         <Navbar.Collapse id="main-nav">
           <Nav className="ms-auto mb-2 mb-lg-0 align-items-center gap-2">
             <Nav.Link as={NavLink} to="/" className="d-flex align-items-center gap-2">
               <BsCalendar3 aria-hidden="true" />
-              <span>Dashboard</span>
+              <span>Strona główna</span>
             </Nav.Link>
             <Nav.Link as={NavLink} to="/about" className="d-flex align-items-center gap-2">
               <BsBuilding aria-hidden="true" />
-              <span>Facilities</span>
-            </Nav.Link>
-            <Nav.Link as={NavLink} to="/about" className="d-flex align-items-center gap-2">
-              <BsHeadset aria-hidden="true" />
-              <span>Support</span>
+              <span>Obiekty</span>
             </Nav.Link>
             {user
               ? <>
                   {user.role === UserRole.Admin && (
-                    <Nav.Link as={NavLink} to="/admin">Admin Dashboard</Nav.Link>
+                    <Nav.Link as={NavLink} to="/admin">Panel administratora</Nav.Link>
                   )}
-                  <Nav.Link as={NavLink} to="/profile">My Profile</Nav.Link>
-                  <Button variant="outline-danger" size="sm" onClick={logout}>Logout</Button>
+                  <NavDropdown
+                    title={
+                      <span className="d-flex align-items-center gap-2">
+                        <BsPersonCircle aria-hidden="true" />
+                        <span>Moje konto</span>
+                        <BsChevronDown size={14} aria-hidden="true" />
+                      </span>
+                    }
+                    id="account-dropdown"
+                    align="end"
+                  >
+                    <Dropdown.Item as={Link} to="/profile" className="d-flex align-items-center gap-2">
+                      <BsPersonCircle size={16} />
+                      <span>Profil</span>
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={logout} className="d-flex align-items-center gap-2 text-danger">
+                      <BsBoxArrowRight size={16} />
+                      <span>Wyloguj</span>
+                    </Dropdown.Item>
+                  </NavDropdown>
                 </>
               : <>
-                  <Nav.Link as={NavLink} to="/login">Login</Nav.Link>
-                  <Nav.Link as={NavLink} to="/register">Register</Nav.Link>
+                  <Nav.Link as={NavLink} to="/login">Zaloguj się</Nav.Link>
+                  <Nav.Link as={NavLink} to="/register">Utwórz konto</Nav.Link>
                 </>
             }
             <Button
@@ -50,14 +64,10 @@ export default function AppNavbar() {
               size="sm"
               className="rounded-pill theme-toggle"
               onClick={toggleTheme}
-              title="Toggle theme"
+              title="Przełącz motyw"
             >
               {theme === 'dark' ? <BsSun /> : <BsMoonStars />}
             </Button>
-            <Link to={user ? '/profile' : '/login'} className="btn btn-warning rounded-pill px-3 d-flex align-items-center gap-2">
-              <BsPersonCircle aria-hidden="true" />
-              <span>My account</span>
-            </Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

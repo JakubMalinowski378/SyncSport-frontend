@@ -40,7 +40,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create court');
+      setError(err.response?.data?.detail || 'Nie udało się utworzyć kortu');
     } finally {
       setLoading(false);
     }

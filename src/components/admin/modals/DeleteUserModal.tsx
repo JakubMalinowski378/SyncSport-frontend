@@ -23,7 +23,7 @@ export default function DeleteUserModal({ show, onHide, onSuccess, user }: Delet
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete user');
+      setError(err.response?.data?.detail || 'Nie udało się usunąć użytkownika');
     } finally {
       setLoading(false);
     }

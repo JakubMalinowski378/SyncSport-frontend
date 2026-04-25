@@ -41,7 +41,7 @@ export default function LoginPage() {
       if (err.response && err.response.data && err.response.data.title) {
         setError(err.response.data.title);
       } else {
-        setError('An unexpected error occurred during login. Please try again.');
+        setError('Podczas logowania wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
       }
     } finally {
       setIsLoading(false);
@@ -54,7 +54,7 @@ export default function LoginPage() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h2 className="text-center mb-4">Log In to SyncSport</h2>
+              <h2 className="text-center mb-4">Zaloguj się do SyncSport</h2>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -64,12 +64,12 @@ export default function LoginPage() {
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
-                  <label htmlFor="emailInput" className="form-label">Email Address</label>
+                  <label htmlFor="emailInput" className="form-label">Adres e-mail</label>
                   <input 
                     type="email" 
                     className="form-control" 
                     id="emailInput"
-                    placeholder="name@example.com"
+                    placeholder="imie@przyklad.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -77,13 +77,13 @@ export default function LoginPage() {
                 </div>
                 <div className="mb-4">
                   <div className="d-flex justify-content-between align-items-center">
-                    <label htmlFor="passwordInput" className="form-label mb-0">Password</label>
-                    <Link to="/forgot-password" className="text-decoration-none small">Forgot password?</Link>
+                    <label htmlFor="passwordInput" className="form-label mb-0">Hasło</label>
+                    <Link to="/forgot-password" className="text-decoration-none small">Zapomniałeś hasła?</Link>
                   </div>
                   <PasswordInput 
                     className="mt-2" 
                     id="passwordInput"
-                    placeholder="Enter your password"
+                    placeholder="Wprowadź swoje hasło"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -95,12 +95,12 @@ export default function LoginPage() {
                   className="btn btn-primary w-100 py-2 mb-3"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Logging in...' : 'Log In'}
+                  {isLoading ? 'Logowanie...' : 'Zaloguj się'}
                 </button>
 
                 <div className="text-center">
-                  <span className="text-muted">Don't have an account? </span>
-                  <Link to="/register" className="text-decoration-none">Sign Up</Link>
+                  <span className="text-muted">Nie masz konta? </span>
+                  <Link to="/register" className="text-decoration-none">Utwórz konto</Link>
                 </div>
               </form>
             </div>

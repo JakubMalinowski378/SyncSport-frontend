@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
       if (err.response && err.response.data && err.response.data.title) {
         setError(err.response.data.title);
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError('Wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
       }
     } finally {
       setIsLoading(false);
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h2 className="text-center mb-4">Reset Password</h2>
+              <h2 className="text-center mb-4">Zresetuj hasło</h2>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -44,18 +44,18 @@ export default function ForgotPasswordPage() {
 
               {isSuccess && (
                 <div className="alert alert-success" role="alert">
-                  If an account with that email exists, we have sent a password reset link.
+                  Jeśli konto z tym adresem e-mail istnieje, wysłaliśmy link do resetowania hasła.
                 </div>
               )}
 
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label htmlFor="emailInput" className="form-label">Email Address</label>
+                  <label htmlFor="emailInput" className="form-label">Adres e-mail</label>
                   <input 
                     type="email" 
                     className="form-control" 
                     id="emailInput"
-                    placeholder="name@example.com"
+                    placeholder="imie@przyklad.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -67,11 +67,11 @@ export default function ForgotPasswordPage() {
                   className="btn btn-primary w-100 py-2 mb-3"
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                  {isLoading ? 'Wysyłanie...' : 'Wyślij link resetujący'}
                 </button>
 
                 <div className="text-center">
-                  <Link to="/login" className="text-decoration-none">Back to Log In</Link>
+                  <Link to="/login" className="text-decoration-none">Wróć do logowania</Link>
                 </div>
               </form>
             </div>

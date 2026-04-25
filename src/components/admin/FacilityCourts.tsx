@@ -43,7 +43,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
       setCourts(res.data.items || []);
       setError(null);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch courts');
+      setError(err.response?.data?.detail || 'Nie udało się załadować korty');
     } finally {
       setLoading(false);
     }
@@ -54,7 +54,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   }, [facilityId]);
 
   if (loading) {
-    return <div className="text-center py-3"><Spinner size="sm" /> Loading courts...</div>;
+    return <div className="text-center py-3"><Spinner size="sm" /> Ładowanie kortów...</div>;
   }
 
   if (error) {
@@ -64,22 +64,22 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   return (
     <div className="p-3 bg-card border-top border-secondary">
       <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold mb-0">Assigned Courts</h6>
+        <h6 className="fw-bold mb-0">Przypisane korty</h6>
         <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
-          + Add Court
+          + Dodaj kort
         </Button>
       </div>
       
       {courts.length === 0 ? (
-        <p className="text-secondary small">No courts assigned to this facility.</p>
+        <p className="text-secondary small">Do tego obiektu nie przypisano żadnych kortów.</p>
       ) : (
         <Table size="sm" responsive className="mb-0 text-body">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Surface</th>
-              <th>Active</th>
-              <th className="text-end">Actions</th>
+              <th>Nazwa</th>
+              <th>Typ</th>
+              <th>Aktywny</th>
+              <th className="text-end">Akcje</th>
             </tr>
           </thead>
           <tbody>
@@ -87,12 +87,12 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
               <tr key={c.id}>
                 <td>{c.name}</td>
                 <td>{c.surfaceType}</td>
-                <td>{c.isActive ? 'Yes' : 'No'}</td>
+                <td>{c.isActive ? 'Tak' : 'Nie'}</td>
                 <td className="text-end">
                   <Button 
                     variant="outline-primary" 
                     size="sm" 
-                    title="Edit Court"
+                    title="Edytuj kort"
                     className="me-2"
                     onClick={() => {
                       setSelectedCourt(c);
@@ -104,7 +104,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
                   <Button 
                     variant="outline-danger" 
                     size="sm" 
-                    title="Delete Court"
+                    title="Usuń kort"
                     onClick={() => {
                       setSelectedCourt(c);
                       setShowDeleteModal(true);

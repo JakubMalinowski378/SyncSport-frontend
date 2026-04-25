@@ -25,7 +25,7 @@ export default function ProfilePage() {
       const response = await apiClient.get<GetCurrentUserResponse>('/api/users/me');
       setUserProfile(response.data);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load user profile information.');
+      setError(err.response?.data?.detail || 'Nie udało się załadować informacji profilu użytkownika.');
     } finally {
       setLoading(false);
     }
@@ -47,10 +47,10 @@ export default function ProfilePage() {
   return (
     <Container className="py-5" style={{ maxWidth: '600px' }}>
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="mb-0 fw-bold">My Profile</h2>
+        <h2 className="mb-0 fw-bold">Mój profil</h2>
         {userProfile && (
           <Button variant="primary" onClick={openEditModal}>
-            Edit Profile
+            Edytuj profil
           </Button>
         )}
       </div>
@@ -64,13 +64,13 @@ export default function ProfilePage() {
           <Card.Body className="p-4">
             <Row className="gy-3">
 
-              <Col sm={4} className="text-secondary fw-semibold">Name:</Col>
+              <Col sm={4} className="text-secondary fw-semibold">Imię i nazwisko:</Col>
               <Col sm={8}>{userProfile.firstName} {userProfile.lastName}</Col>
 
-              <Col sm={4} className="text-secondary fw-semibold">Email:</Col>
+              <Col sm={4} className="text-secondary fw-semibold">E-mail:</Col>
               <Col sm={8}>{userProfile.email}</Col>
 
-              <Col sm={4} className="text-secondary fw-semibold">Role:</Col>
+              <Col sm={4} className="text-secondary fw-semibold">Rola:</Col>
               <Col sm={8}>
                 <Badge bg={userProfile.role === 'Admin' ? 'danger' : 'primary'}>
                   {userProfile.role || 'User'}

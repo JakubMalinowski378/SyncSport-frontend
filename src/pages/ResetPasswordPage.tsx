@@ -46,7 +46,7 @@ export default function ResetPasswordPage() {
       if (err.response && err.response.data && err.response.data.title) {
         setError(err.response.data.title);
       } else {
-        setError('An unexpected error occurred. Please try again.');
+        setError('Wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
       }
     } finally {
       setIsLoading(false);
@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h2 className="text-center mb-4">Set New Password</h2>
+              <h2 className="text-center mb-4">Ustaw nowe hasło</h2>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -69,17 +69,17 @@ export default function ResetPasswordPage() {
 
               {isSuccess && (
                 <div className="alert alert-success" role="alert">
-                  Password reset successfully! Redirecting to login...
+                  Hasło zostało zresetowane pomyślnie! Przekierowywanie na stronę logowania...
                 </div>
               )}
 
               {!isSuccess && (
                 <form onSubmit={handleSubmit}>
                   <div className="mb-4">
-                    <label htmlFor="passwordInput" className="form-label">New Password</label>
+                    <label htmlFor="passwordInput" className="form-label">Nowe hasło</label>
                     <PasswordInput 
                       id="passwordInput"
-                      placeholder="Enter new password"
+                      placeholder="Wprowadź nowe hasło"
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       required
@@ -87,10 +87,10 @@ export default function ResetPasswordPage() {
                   </div>
 
                   <div className="mb-4">
-                    <label htmlFor="confirmPasswordInput" className="form-label">Confirm Password</label>
+                    <label htmlFor="confirmPasswordInput" className="form-label">Potwierdź hasło</label>
                     <PasswordInput 
                       id="confirmPasswordInput"
-                      placeholder="Confirm new password"
+                      placeholder="Potwierdź nowe hasło"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -102,11 +102,11 @@ export default function ResetPasswordPage() {
                     className="btn btn-primary w-100 py-2 mb-3"
                     disabled={isLoading || !token}
                   >
-                    {isLoading ? 'Resetting...' : 'Reset Password'}
+                    {isLoading ? 'Resetowanie...' : 'Zresetuj hasło'}
                   </button>
 
                   <div className="text-center">
-                    <Link to="/login" className="text-decoration-none">Back to Log In</Link>
+                    <Link to="/login" className="text-decoration-none">Wróć do logowania</Link>
                   </div>
                 </form>
               )}

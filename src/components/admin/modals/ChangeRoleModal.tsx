@@ -32,7 +32,7 @@ export default function ChangeRoleModal({ show, onHide, onSuccess, user }: Chang
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to change role');
+      setError(err.response?.data?.detail || 'Nie udało się zmienić rolę');
     } finally {
       setLoading(false);
     }
@@ -41,26 +41,26 @@ export default function ChangeRoleModal({ show, onHide, onSuccess, user }: Chang
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton className="bg-card border-secondary">
-        <Modal.Title>Change Role</Modal.Title>
+        <Modal.Title>Zmień rolę użytkownika</Modal.Title>
       </Modal.Header>
       <Modal.Body className="bg-card">
         {error && <Alert variant="danger">{error}</Alert>}
-        <p>Update role for <strong>{user?.email}</strong>:</p>
+        <p>Zaktualizuj rolę dla <strong>{user?.email}</strong>:</p>
         <Form.Select 
           className="bg-card text-body" 
           value={newRole} 
           onChange={e => setNewRole(parseInt(e.target.value))}
           disabled={loading}
         >
-          <option value={1}>User</option>
-          <option value={2}>Manager</option>
-          <option value={3}>Admin</option>
+          <option value={1}>Użytkownik</option>
+          <option value={2}>Menedżer</option>
+          <option value={3}>Administrator</option>
         </Form.Select>
       </Modal.Body>
       <Modal.Footer className="bg-card border-secondary">
-        <Button variant="secondary" onClick={onHide} disabled={loading}>Cancel</Button>
+        <Button variant="secondary" onClick={onHide} disabled={loading}>Anuluj</Button>
         <Button variant="primary" onClick={handleRoleChange} disabled={loading}>
-          {loading ? <Spinner size="sm" animation="border" /> : 'Save Role'}
+          {loading ? <Spinner size="sm" animation="border" /> : 'Zapisz rolę'}
         </Button>
       </Modal.Footer>
     </Modal>

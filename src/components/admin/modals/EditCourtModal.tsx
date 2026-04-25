@@ -63,7 +63,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update court');
+      setError(err.response?.data?.detail || 'Nie udało się zaktualizować kortu');
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
     <Modal show={show} onHide={onHide} onExited={handleExited} centered>
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton className="bg-card border-secondary">
-          <Modal.Title>Edit Court</Modal.Title>
+          <Modal.Title>Edytuj kort</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}

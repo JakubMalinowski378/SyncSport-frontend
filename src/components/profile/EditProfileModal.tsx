@@ -41,7 +41,7 @@ export default function EditProfileModal({
       });
       onSuccess();
     } catch (err: any) {
-      setEditError(err.response?.data?.detail || 'Failed to update profile.');
+      setEditError(err.response?.data?.detail || 'Nie udało się zaktualizować profilu.');
     } finally {
       setSaving(false);
     }
@@ -50,7 +50,7 @@ export default function EditProfileModal({
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton className="bg-card border-secondary">
-        <Modal.Title>Edit Profile</Modal.Title>
+        <Modal.Title>Edytuj profil</Modal.Title>
       </Modal.Header>
       <Modal.Body className="bg-card">
         {editError && <Alert variant="danger">{editError}</Alert>}

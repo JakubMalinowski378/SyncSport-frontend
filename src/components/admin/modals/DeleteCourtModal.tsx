@@ -32,7 +32,7 @@ export default function DeleteCourtModal({ show, onHide, onSuccess, facilityId, 
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to delete court');
+      setError(err.response?.data?.detail || 'Nie udało się usunąć kortu');
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export default function DeleteCourtModal({ show, onHide, onSuccess, facilityId, 
           Cancel
         </Button>
         <Button variant="danger" onClick={handleDelete} disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Delete Court'}
+          {loading ? <Spinner size="sm" /> : 'Usuń kort'}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -165,7 +165,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       onSuccess();
       onHide();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to update facility');
+      setError(err.response?.data?.detail || 'Nie udało się zaktualizować obiektu');
     } finally {
       setLoading(false);
     }
@@ -200,7 +200,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
     <Modal show={show} onHide={onHide} onExited={handleExited} size="lg" centered>
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton className="bg-card border-secondary">
-          <Modal.Title>Edit Facility</Modal.Title>
+          <Modal.Title>Edytuj obiekt</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}

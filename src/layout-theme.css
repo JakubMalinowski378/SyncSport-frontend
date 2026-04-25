@@ -19,6 +19,11 @@ body {
   transform: rotate(15deg);
 }
 
+/* Hide default NavDropdown arrow */
+.nav-link.dropdown-toggle::after {
+  display: none;
+}
+
 .footer-link {
   text-decoration: none;
   transition: opacity 0.2s ease;

@@ -14,9 +14,9 @@ import PrivateRoute from './components/auth/PrivateRoute';
 function About() {
   return (
     <div className="container mt-5">
-      <h2>About SyncSport</h2>
-      <p>This is a sample application demonstrating Bootstrap components and React Router navigation.</p>
-      <Link className="btn btn-secondary" to="/">Go Back Home</Link>
+      <h2>O SyncSport</h2>
+      <p>To jest przykładowa aplikacja demonstrująca komponenty Bootstrap i nawigację React Router.</p>
+      <Link className="btn btn-secondary" to="/">Wróć do strony głównej</Link>
     </div>
   );
 }

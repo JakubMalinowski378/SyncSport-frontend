@@ -37,7 +37,7 @@ export default function ManagedFacilitiesModal({ show, onHide, user }: ManagedFa
   return (
     <Modal show={show} onHide={onHide} centered>
       <Modal.Header closeButton className="bg-card border-secondary">
-        <Modal.Title>Managed Facilities</Modal.Title>
+        <Modal.Title>Zarządzane obiekty</Modal.Title>
       </Modal.Header>
       <Modal.Body className="bg-card text-body">
         {loading ? (

@@ -68,7 +68,7 @@ export default function FacilityCourtsPage() {
         setCourts(courtsRes.data.items || []);
         setError(null);
       } catch (err: any) {
-        setError(err.response?.data?.detail || 'Failed to load details');
+        setError(err.response?.data?.detail || 'Nie udało się załadować szczegółów');
       } finally {
         setLoading(false);
       }
@@ -123,7 +123,7 @@ export default function FacilityCourtsPage() {
         startTime: startObj.format('YYYY-MM-DDTHH:mm:ssZ'),
         endTime: endObj.format('YYYY-MM-DDTHH:mm:ssZ')
       });
-      setBookingSuccess('Court booked successfully!');
+setBookingSuccess('Kort został zarezerwowany pomyślnie!');
       
       // Refresh slots
       const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${id}/available-slots`, {
@@ -131,7 +131,7 @@ export default function FacilityCourtsPage() {
       });
       setSlots(slotsRes.data.courts || []);
     } catch (err: any) {
-      setBookingError(err.response?.data?.detail || 'Failed to book the court.');
+        setBookingError(err.response?.data?.detail || 'Nie udało się zarezerwować kortu.');
     } finally {
       setBookingLoading(false);
     }
@@ -141,7 +141,7 @@ export default function FacilityCourtsPage() {
     return (
       <Container className="py-5 text-center">
         <Spinner animation="border" />
-        <p className="mt-2">Loading facility details...</p>
+        <p className="mt-2">Ładowanie szczegółów obiektu...</p>
       </Container>
     );
   }
@@ -171,11 +171,11 @@ export default function FacilityCourtsPage() {
             <p className="text-secondary mb-0">{facility?.address}</p>
           </div>
         </div>
-        <Link to="/" className="btn btn-outline-secondary btn-sm">Back to Search</Link>
+        <Link to="/" className="btn btn-outline-secondary btn-sm">Powrót do wyszukiwania</Link>
       </div>
 
       <div className="d-flex align-items-center mb-4 p-3 bg-card border border-secondary rounded shadow-sm">
-        <h5 className="mb-0 me-3">Select Date:</h5>
+        <h5 className="mb-0 me-3">Wybierz datę:</h5>
         <Form.Control
           type="date"
           value={selectedDate}
@@ -187,9 +187,9 @@ export default function FacilityCourtsPage() {
         {slotsLoading && <Spinner animation="border" size="sm" className="ms-3 text-primary" />}
       </div>
 
-      <h4 className="mb-3">Available Courts & Times</h4>
+      <h4 className="mb-3">Dostępne korty i godziny</h4>
       {courts.length === 0 ? (
-        <Alert variant="info">No courts are assigned to this facility yet.</Alert>
+        <Alert variant="info">Do tego obiektu nie przypisano jeszcze żadnych kortów.</Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
           {courts.map(court => {
@@ -200,17 +200,17 @@ export default function FacilityCourtsPage() {
                 <Card className={`h-100 shadow-sm border-secondary ${!court.isActive ? 'opacity-50' : ''}`}>
                   <Card.Body>
                     <Card.Title>{court.name || 'Unnamed Court'}</Card.Title>
-                    <Card.Subtitle className="mb-3 text-muted small">Surface: {court.surfaceType}</Card.Subtitle>
+                    <Card.Subtitle className="mb-3 text-muted small">Nawierzchnia: {court.surfaceType}</Card.Subtitle>
                     
                     {!court.isActive ? (
                       <Alert variant="secondary" className="mb-0 text-center py-2">
-                        Currently Inactive
+                        Aktualnie nieaktywny
                       </Alert>
                     ) : (
                       <>
-                        <h6 className="fw-semibold mt-3 mb-2 font-monospace text-secondary">Free slots:</h6>
+                        <h6 className="fw-semibold mt-3 mb-2 font-monospace text-secondary">Wolne miejsca:</h6>
                         {courtSlots.length === 0 ? (
-                          <p className="text-muted small mb-0">No available slots on this date.</p>
+                          <p className="text-muted small mb-0">Brak dostępnych miejsc na tę datę.</p>
                         ) : (
                           <div className="d-flex flex-wrap gap-2">
                             {courtSlots.map(time => (
@@ -241,7 +241,7 @@ export default function FacilityCourtsPage() {
         if (bookingSuccess) setBookingCourt(null);
       }} centered>
         <Modal.Header closeButton={!bookingLoading} className="bg-card border-secondary">
-          <Modal.Title>Confirm Booking</Modal.Title>
+          <Modal.Title>Potwierdź rezerwację</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {bookingSuccess ? (
@@ -249,13 +249,13 @@ export default function FacilityCourtsPage() {
           ) : (
             <>
               {bookingError && <Alert variant="danger">{bookingError}</Alert>}
-              <p>You are about to book:</p>
+              <p>Zamierzasz zarezerwować:</p>
               <ul className="mb-0">
-                <li><strong>Court:</strong> {bookingCourt?.name}</li>
-                <li><strong>Date:</strong> {dayjs(selectedDate).format('MMMM D, YYYY')}</li>
-                <li><strong>Time:</strong> {bookingTime?.substring(0, 5)}</li>
+                <li><strong>Kort:</strong> {bookingCourt?.name}</li>
+                <li><strong>Data:</strong> {dayjs(selectedDate).format('D MMMM YYYY')}</li>
+                <li><strong>Godzina:</strong> {bookingTime?.substring(0, 5)}</li>
               </ul>
-              <p className="mt-3 text-muted small">Note: Your booking will be for 1 hour by default.</p>
+              <p className="mt-3 text-muted small">Uwaga: Rezerwacja będzie dotyczyć 1 godziny domyślnie.</p>
             </>
           )}
         </Modal.Body>
@@ -263,15 +263,15 @@ export default function FacilityCourtsPage() {
           {!bookingSuccess ? (
             <>
               <Button variant="secondary" onClick={() => setBookingCourt(null)} disabled={bookingLoading}>
-                Cancel
+                Anuluj
               </Button>
               <Button variant="primary" onClick={confirmBooking} disabled={bookingLoading}>
-                {bookingLoading ? <Spinner size="sm" /> : 'Confirm Reservation'}
+                {bookingLoading ? <Spinner size="sm" /> : 'Potwierdź rezerwację'}
               </Button>
             </>
           ) : (
             <Button variant="success" onClick={() => setBookingCourt(null)}>
-              Done
+              Gotowe
             </Button>
           )}
         </Modal.Footer>

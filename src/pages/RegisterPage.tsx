@@ -43,7 +43,7 @@ export default function RegisterPage() {
       if (err.response && err.response.data && err.response.data.title) {
         setError(err.response.data.title);
       } else {
-        setError('An unexpected error occurred during registration. Please try again.');
+        setError('Podczas rejestracji wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
       }
     } finally {
       setIsLoading(false);
@@ -56,7 +56,7 @@ export default function RegisterPage() {
         <div className="col-md-6 col-lg-5">
           <div className="card shadow-sm">
             <div className="card-body p-4">
-              <h2 className="text-center mb-4">Create an Account</h2>
+              <h2 className="text-center mb-4">Utwórz konto</h2>
               
               {error && (
                 <div className="alert alert-danger" role="alert">
@@ -66,31 +66,31 @@ export default function RegisterPage() {
 
               {isSuccess && (
                 <div className="alert alert-success" role="alert">
-                  Registration successful! Redirecting to login...
+                  Rejestracja powiodła się! Przekierowywanie na stronę logowania...
                 </div>
               )}
 
               <form onSubmit={handleSubmit}>
                 <div className="row mb-3">
                   <div className="col">
-                    <label htmlFor="firstNameInput" className="form-label">First Name</label>
+                    <label htmlFor="firstNameInput" className="form-label">Imię</label>
                     <input 
                       type="text" 
                       className="form-control" 
                       id="firstNameInput"
-                      placeholder="John"
+                      placeholder="Jan"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
                     />
                   </div>
                   <div className="col">
-                    <label htmlFor="lastNameInput" className="form-label">Last Name</label>
+                    <label htmlFor="lastNameInput" className="form-label">Nazwisko</label>
                     <input 
                       type="text" 
                       className="form-control" 
                       id="lastNameInput"
-                      placeholder="Doe"
+                      placeholder="Kowalski"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
@@ -99,12 +99,12 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mb-3">
-                  <label htmlFor="emailInput" className="form-label">Email Address</label>
+                  <label htmlFor="emailInput" className="form-label">Adres e-mail</label>
                   <input 
                     type="email" 
                     className="form-control" 
                     id="emailInput"
-                    placeholder="name@example.com"
+                    placeholder="imie@przyklad.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -112,10 +112,10 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor="passwordInput" className="form-label">Password</label>
+                  <label htmlFor="passwordInput" className="form-label">Hasło</label>
                   <PasswordInput 
                     id="passwordInput"
-                    placeholder="Create a strong password"
+                    placeholder="Utwórz silne hasło"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -123,10 +123,10 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mb-4">
-                  <label htmlFor="confirmPasswordInput" className="form-label">Confirm Password</label>
+                  <label htmlFor="confirmPasswordInput" className="form-label">Potwierdź hasło</label>
                   <PasswordInput 
                     id="confirmPasswordInput"
-                    placeholder="Confirm your password"
+                    placeholder="Potwierdź swoje hasło"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
@@ -138,12 +138,12 @@ export default function RegisterPage() {
                   className="btn btn-primary w-100 py-2 mb-3"
                   disabled={isLoading || isSuccess}
                 >
-                  {isLoading ? 'Creating account...' : 'Sign Up'}
+                  {isLoading ? 'Tworzenie konta...' : 'Utwórz konto'}
                 </button>
                 
                 <div className="text-center">
-                  <span className="text-muted">Already have an account? </span>
-                  <Link to="/login" className="text-decoration-none">Log In</Link>
+                  <span className="text-muted">Masz już konto? </span>
+                  <Link to="/login" className="text-decoration-none">Zaloguj się</Link>
                 </div>
               </form>
             </div>
