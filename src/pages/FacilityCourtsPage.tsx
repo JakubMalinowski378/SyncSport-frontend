@@ -35,7 +35,7 @@ interface AvailableSlotsResponse {
 }
 
 export default function FacilityCourtsPage() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -59,10 +59,10 @@ export default function FacilityCourtsPage() {
     const fetchFacilityAndCourts = async () => {
       setLoading(true);
       try {
-        const facilityRes = await apiClient.get<Facility>(`/api/facilities/${id}`);
+        const facilityRes = await apiClient.get<Facility>(`/api/facilities/${slug}`);
         setFacility(facilityRes.data);
 
-        const courtsRes = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${id}/courts`, {
+        const courtsRes = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${slug}/courts`, {
           params: { PageNumber: 1, PageSize: 30 }
         });
         setCourts(courtsRes.data.items || []);
@@ -74,15 +74,15 @@ export default function FacilityCourtsPage() {
       }
     };
     
-    if (id) fetchFacilityAndCourts();
-  }, [id]);
+    if (slug) fetchFacilityAndCourts();
+  }, [slug]);
 
   useEffect(() => {
     const fetchSlots = async () => {
-      if (!id || !selectedDate) return;
+      if (!slug || !selectedDate) return;
       setSlotsLoading(true);
       try {
-        const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${id}/available-slots`, {
+        const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${slug}/available-slots`, {
           params: { date: selectedDate }
         });
         setSlots(slotsRes.data.courts || []);
@@ -95,7 +95,7 @@ export default function FacilityCourtsPage() {
     };
 
     fetchSlots();
-  }, [id, selectedDate]);
+  }, [slug, selectedDate]);
 
   const handleBookClick = (court: Court, time: string) => {
     if (!user) {
@@ -126,7 +126,7 @@ export default function FacilityCourtsPage() {
 setBookingSuccess('Kort został zarezerwowany pomyślnie!');
       
       // Refresh slots
-      const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${id}/available-slots`, {
+      const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${slug}/available-slots`, {
         params: { date: selectedDate }
       });
       setSlots(slotsRes.data.courts || []);

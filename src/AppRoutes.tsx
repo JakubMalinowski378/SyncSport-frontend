@@ -34,7 +34,7 @@ export default function AppRoutes() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/facility/:id" element={<FacilityCourtsPage />} />
+            <Route path="/facility/:slug" element={<FacilityCourtsPage />} />
             <Route path="/profile" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />

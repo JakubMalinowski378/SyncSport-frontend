@@ -20,6 +20,7 @@ import '../styles/home-page.css';
 
 interface Facility {
   id: string;
+  slug: string | null;
   name: string | null;
   address: string | null;
   reservationDuration?: number | null;
@@ -66,7 +67,7 @@ export default function HomePage() {
       setFacilities(res.data.items || []);
       setTotalCount(res.data.totalCount || 0);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Nie udało się załadować obiekty');
+      setError(err.response?.data?.detail || 'Nie udało się załadować obiektów');
     } finally {
       setLoading(false);
     }
@@ -255,7 +256,7 @@ export default function HomePage() {
                       </div>
 
                       <div className="mt-3 d-grid">
-                        <Link to={`/facility/${facility.id}`} className="btn btn-outline-primary rounded-pill">
+                        <Link to={`/facility/${encodeURIComponent(facility.slug || facility.id)}`} className="btn btn-outline-primary rounded-pill">
                           <BsCalendarCheck className="me-1" /> Sprawdź dostępność
                         </Link>
                       </div>
