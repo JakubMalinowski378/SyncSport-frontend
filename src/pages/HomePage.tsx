@@ -1,14 +1,45 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, Button, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
-import { useAuth } from '../hooks/useAuth';
+import { Row, Col, Card, Spinner, Alert, Badge } from 'react-bootstrap';
+import {
+  BsTrophyFill,
+  BsDribbble,
+  BsCheckCircle,
+  BsClockHistory,
+  BsBuilding,
+  BsHourglassSplit,
+  BsGeoAltFill,
+  BsCalendarWeek,
+  BsClock,
+  BsExclamationCircle,
+  BsCalendarCheck,
+  BsGeoAlt,
+  BsTelephone,
+  BsEnvelope,
+  BsCameraFill,
+} from 'react-icons/bs';
 import apiClient from '../services/apiClient';
+import '../styles/home-page.css';
 
 interface Facility {
   id: string;
   name: string | null;
   address: string | null;
-  images?: string[] | null;
+  reservationDuration?: number | null;
+  openingHours?: OpeningHour[] | null;
+  images?: (string | FacilityImage)[] | null;
+}
+
+interface FacilityImage {
+  url: string;
+  isMain?: boolean;
+}
+
+interface OpeningHour {
+  dayName: string;
+  openTime: string;
+  closeTime: string;
+  isClosed: boolean;
 }
 
 interface GetFacilitiesResponsePagedResult {
@@ -20,25 +51,23 @@ interface GetFacilitiesResponsePagedResult {
 }
 
 export default function HomePage() {
-  const { user, logout } = useAuth();
-  
-  const [searchTerm, setSearchTerm] = useState('');
+  const [totalCount, setTotalCount] = useState(0);
   const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFacilities = async (search: string = '') => {
+  const fetchFacilities = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await apiClient.get<GetFacilitiesResponsePagedResult>('/api/facilities', {
-        params: { 
-          PageNumber: 1, 
+        params: {
+          PageNumber: 1,
           PageSize: 15,
-          SearchTerm: search || undefined
-        }
+        },
       });
       setFacilities(res.data.items || []);
+      setTotalCount(res.data.totalCount || 0);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to fetch facilities');
     } finally {
@@ -50,128 +79,188 @@ export default function HomePage() {
     fetchFacilities();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    fetchFacilities(searchTerm);
+  const formatTime = (timeStr?: string) => {
+    if (!timeStr || timeStr === '00:00:00') {
+      return '-';
+    }
+    return timeStr.substring(0, 5);
   };
-  
-  return (
-    <div className="container mt-5">
-      <div className="jumbotron p-5 bg-light rounded text-center shadow-sm">
-        <h1 className="display-4 text-primary fw-bold mb-3">Welcome to SyncSport!</h1>
-        <p className="lead text-secondary">
-          Your ultimate destination for discovering, booking, and managing sports facilities.
-        </p>
-        <hr className="my-4" />
-        <p className="mb-4">
-          Whether you're looking for a quick tennis match, booking a football pitch, or managing your own facility, SyncSport has got you covered.
-        </p>
-        
-        {user ? (
-           <div className="mt-4 p-4 border rounded bg-white shadow-sm d-inline-block text-start">
-             <h4 className="mb-3 text-success">👋 Welcome back, {user.email}!</h4>
-             <ul className="list-group list-group-flush mb-4">
-                <li className="list-group-item border-0 px-0">
-                  <span className="badge bg-secondary me-2">Role</span> 
-                  {user.role === 1 ? 'User' : user.role === 2 ? 'Manager' : 'Admin'}
-                </li>
-                {user.managedFacilityIds && user.managedFacilityIds.length > 0 && (
-                  <li className="list-group-item border-0 px-0">
-                    <span className="badge bg-info me-2">Facilities</span> 
-                    {user.managedFacilityIds.join(', ')}
-                  </li>
-                )}
-             </ul>
-             <div className="d-flex gap-2">
-               <button className="btn btn-outline-danger w-100" onClick={logout}>Logout</button>
-             </div>
-           </div>
-        ) : (
-           <div className="mt-4 gap-3 d-flex justify-content-center">
-             <Link className="btn btn-success btn-lg px-4" to="/login" role="button">Log In</Link>
-             <Link className="btn btn-outline-primary btn-lg px-4" to="/about" role="button">Learn more</Link>
-           </div>
-        )}
-      </div>
 
-      {!user && (
-        <div className="row mt-5 text-center">
-          <div className="col-md-4 mb-4">
-            <div className="h-100 p-4 border rounded bg-white shadow-sm">
-              <div className="fs-1 mb-3">🔍</div>
-              <h3 className="h5">Find Courts</h3>
-              <p className="text-muted small">Easily browse available courts and facilities in your area.</p>
-            </div>
-          </div>
-          <div className="col-md-4 mb-4">
-            <div className="h-100 p-4 border rounded bg-white shadow-sm">
-              <div className="fs-1 mb-3">📅</div>
-              <h3 className="h5">Book Instantly</h3>
-              <p className="text-muted small">Secure your spot instantly with our streamlined booking system.</p>
-            </div>
-          </div>
-          <div className="col-md-4 mb-4">
-            <div className="h-100 p-4 border rounded bg-white shadow-sm">
-              <div className="fs-1 mb-3">🏆</div>
-              <h3 className="h5">Play & Enjoy</h3>
-              <p className="text-muted small">Show up with your friends and enjoy your favorite sports.</p>
-            </div>
-          </div>
-        </div>
-      )}
+  const getMainImageUrl = (images?: (string | FacilityImage)[] | null) => {
+    if (!images || images.length === 0) {
+      return null;
+    }
 
-      <div className="mt-5 mb-5 align-items-center d-flex flex-column">
-        <h2 className="mb-4">Explore Facilities</h2>
-        <Form onSubmit={handleSearch} className="d-flex w-100 mb-4" style={{ maxWidth: '600px' }}>
-          <Form.Control
-            type="search"
-            placeholder="Search by name or address..."
-            className="me-2"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            disabled={loading}
-          />
-          <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Search'}
-          </Button>
-        </Form>
-        
-        <div className="w-100">
-          {error && <Alert variant="danger">{error}</Alert>}
-          {!loading && facilities.length === 0 && !error && (
-            <p className="text-secondary text-center">No facilities found. Try adjusting your search.</p>
+    const firstObjectImage = images.find((img): img is FacilityImage => typeof img !== 'string' && !!img?.url);
+    if (firstObjectImage) {
+      const mainObjectImage = images.find((img): img is FacilityImage => typeof img !== 'string' && img.isMain === true && !!img.url);
+      return (mainObjectImage || firstObjectImage).url;
+    }
+
+    const firstStringImage = images.find((img): img is string => typeof img === 'string' && img.length > 0);
+    return firstStringImage || null;
+  };
+
+  const renderOpeningPreview = (openingHours?: OpeningHour[] | null) => {
+    if (!openingHours || openingHours.length === 0) {
+      return <span className="text-muted small">No hours info</span>;
+    }
+
+    const daysToShow = openingHours.slice(0, 5);
+    const firstOpenDay = openingHours.find((day) => !day.isClosed);
+
+    return (
+      <div className="hours-preview p-2">
+        <div className="d-flex flex-wrap">
+          {daysToShow.map((day) => (
+            <span
+              key={day.dayName}
+              className={`day-badge me-1 mb-1 ${day.isClosed ? 'day-closed' : 'day-open'}`}
+            >
+              {day.dayName.substring(0, 3)}
+            </span>
+          ))}
+          {openingHours.length > 5 && (
+            <span className="day-badge bg-light text-secondary mb-1">+{openingHours.length - 5} more</span>
           )}
-          
-          <Row xs={1} md={2} lg={3} className="g-4">
-            {facilities.map(facility => (
-              <Col key={facility.id}>
-                <Card className="h-100 shadow-sm border-secondary">
-                  {facility.images && facility.images.length > 0 && (
-                    <Card.Img 
-                      variant="top" 
-                      src={facility.images[0]} 
-                      alt={facility.name || 'Facility Image'} 
-                      style={{ height: '200px', objectFit: 'cover' }}
-                    />
-                  )}
-                  <Card.Body>
-                    <Card.Title>{facility.name || 'Unnamed Facility'}</Card.Title>
-                    <Card.Subtitle className="mb-2 text-muted small">{facility.address || 'No address provided'}</Card.Subtitle>
-                    <Card.Text className="mt-3">
-                      This facility is available for booking. Browse and book courts seamlessly!
-                    </Card.Text>
-                  </Card.Body>
-                  <Card.Footer className="bg-transparent border-0 text-end">
-                    <Link to={`/facility/${facility.id}`} className="btn btn-outline-primary btn-sm">
-                      View Courts
-                    </Link>
-                  </Card.Footer>
-                </Card>
-              </Col>
-            ))}
-          </Row>
+        </div>
+        <div className="mt-2 small text-secondary">
+          {firstOpenDay ? (
+            <>
+              <BsClock className="me-1" />
+              e.g. {firstOpenDay.dayName}: {formatTime(firstOpenDay.openTime)}-{formatTime(firstOpenDay.closeTime)}
+            </>
+          ) : (
+            <span className="text-danger">
+              <BsExclamationCircle className="me-1" />
+              Temporarily closed all week
+            </span>
+          )}
         </div>
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <main className="container py-4 py-md-5 home-main">
+      <section className="hero-gradient p-4 p-md-5 mb-5 shadow-sm">
+        <Row className="align-items-center">
+          <Col md={8}>
+            <h1 className="display-5 fw-bold mb-3 d-flex align-items-center gap-2">
+              <BsTrophyFill className="text-warning" />
+              <span>sport.courts</span>
+            </h1>
+            <p className="lead fs-5 text-secondary">
+              Find and reserve indoor and outdoor courts in your city. Real-time availability, flexible hours, and premium facilities.
+            </p>
+            <div className="d-flex flex-wrap gap-3 mt-3">
+              <Badge bg="success" className="bg-opacity-10 text-success rounded-pill px-3 py-2 fw-medium">
+                <BsCheckCircle className="me-1" /> Verified facilities
+              </Badge>
+              <Badge bg="info" className="bg-opacity-10 text-info rounded-pill px-3 py-2 fw-medium">
+                <BsClockHistory className="me-1" /> Real-time slots
+              </Badge>
+            </div>
+          </Col>
+          <Col md={4} className="text-center mt-4 mt-md-0">
+            <BsDribbble style={{ fontSize: '4.5rem', opacity: 0.7 }} />
+          </Col>
+        </Row>
+      </section>
+
+      <section>
+        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+          <h2 className="h3 fw-semibold mb-0 d-flex align-items-center gap-2">
+            <BsBuilding /> All facilities
+          </h2>
+          <span className="badge bg-secondary bg-opacity-25 text-dark rounded-pill px-3 py-2">
+            <BsBuilding className="me-1" /> {loading ? 'Loading facilities...' : `${totalCount || facilities.length} facilities`}
+          </span>
+        </div>
+
+        {error && <Alert variant="danger">{error}</Alert>}
+
+        {loading ? (
+          <div className="text-center py-5">
+            <Spinner animation="border" className="text-primary" />
+          </div>
+        ) : facilities.length === 0 ? (
+          <Alert variant="light" className="text-center py-5">No facilities available at the moment.</Alert>
+        ) : (
+          <Row className="g-4">
+            {facilities.map((facility) => {
+              const imageUrl = getMainImageUrl(facility.images);
+              const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} min slots` : 'Flexible slots';
+
+              return (
+                <Col key={facility.id} md={6} lg={4}>
+                  <Card className="facility-card h-100 shadow-sm">
+                    {imageUrl ? (
+                      <Card.Img
+                        className="card-img-top"
+                        src={imageUrl}
+                        alt={facility.name || 'Facility image'}
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/600x400/e9ecef/6c757d?text=Sports+Facility';
+                        }}
+                      />
+                    ) : (
+                      <div className="card-img-top d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
+                        <BsCameraFill className="fs-1 text-secondary" />
+                        <span className="ms-2 small">No image</span>
+                      </div>
+                    )}
+
+                    <Card.Body className="d-flex flex-column">
+                      <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
+                        <h5 className="card-title fw-bold fs-5 mb-0">{facility.name || 'Unnamed facility'}</h5>
+                        <span className="badge-duration rounded-pill">
+                          <BsHourglassSplit className="me-1" /> {durationLabel}
+                        </span>
+                      </div>
+
+                      <div className="mb-2 text-secondary small">
+                        <BsGeoAltFill className="me-1" /> {facility.address || 'No address provided'}
+                      </div>
+
+                      <div className="mt-2">
+                        <div className="d-flex align-items-center gap-1 mb-1">
+                          <BsCalendarWeek className="text-primary" />
+                          <span className="small fw-semibold">Opening schedule</span>
+                        </div>
+                        {renderOpeningPreview(facility.openingHours)}
+                      </div>
+
+                      <div className="mt-3 d-grid">
+                        <Link to={`/facility/${facility.id}`} className="btn btn-outline-primary rounded-pill">
+                          <BsCalendarCheck className="me-1" /> Check availability
+                        </Link>
+                      </div>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              );
+            })}
+          </Row>
+        )}
+      </section>
+
+      <section className="mt-5 pt-4 border-top text-center text-secondary">
+        <Row>
+          <Col md={6} className="text-md-start mb-3 mb-md-0">
+            <BsGeoAlt className="text-primary me-1" /> Green Meadows Sports District
+          </Col>
+          <Col md={6} className="text-md-end">
+            <span className="me-3 d-inline-block">
+              <BsTelephone className="me-1" /> +48 22 123 45 67
+            </span>
+            <span className="d-inline-block">
+              <BsEnvelope className="me-1" /> booking@sportcourts.com
+            </span>
+          </Col>
+        </Row>
+        <div className="mt-3 small">© 2025 SportCourts - smart facility reservation system</div>
+      </section>
+    </main>
   );
 }

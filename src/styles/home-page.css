@@ -1,0 +1,104 @@
+.home-main {
+  background: #f4f8fe;
+}
+
+[data-bs-theme="dark"] .home-main {
+  background: var(--bs-body-bg);
+}
+
+.hero-gradient {
+  background: linear-gradient(135deg, #eef2fa 0%, #ffffff 100%);
+  border-radius: 1.5rem;
+}
+
+[data-bs-theme="dark"] .hero-gradient {
+  background: linear-gradient(135deg, #2a2a4a 0%, #1a1a2e 100%);
+}
+
+.facility-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border: none;
+  border-radius: 1.25rem;
+  overflow: hidden;
+}
+
+.facility-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.08) !important;
+}
+
+[data-bs-theme="dark"] .facility-card:hover {
+  box-shadow: 0 1rem 2rem rgba(0, 229, 255, 0.15) !important;
+}
+
+.facility-card .card-img-top {
+  height: 180px;
+  object-fit: cover;
+  background-color: #cfe2ff;
+}
+
+[data-bs-theme="dark"] .facility-card .card-img-top {
+  background-color: #2a2a4a;
+}
+
+.badge-duration {
+  background-color: #e9ecef;
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 0.7rem;
+  padding: 0.35rem 0.85rem;
+  white-space: nowrap;
+}
+
+[data-bs-theme="dark"] .badge-duration {
+  background-color: #3a3a5a;
+  color: #e8eaf6;
+}
+
+.hours-preview {
+  background: #f8f9fc;
+  border-radius: 1rem;
+}
+
+[data-bs-theme="dark"] .hours-preview {
+  background: #2a2a4a;
+}
+
+.day-badge {
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 40px;
+  padding: 0.25rem 0.65rem;
+  display: inline-block;
+}
+
+.day-open {
+  background: #d1fae5;
+  color: #0a5c2e;
+}
+
+[data-bs-theme="dark"] .day-open {
+  background: #1d4a3a;
+  color: #86efac;
+}
+
+.day-closed {
+  background: #ffe4e2;
+  color: #b13e2d;
+  text-decoration: line-through;
+}
+
+[data-bs-theme="dark"] .day-closed {
+  background: #4a2a2a;
+  color: #fca5a5;
+}
+
+@media (max-width: 576px) {
+  .facility-card .card-img-top {
+    height: 150px;
+  }
+
+  .hero-gradient {
+    text-align: center;
+  }
+}
