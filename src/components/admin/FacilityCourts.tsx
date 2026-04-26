@@ -21,12 +21,26 @@ interface CourtDtoPagedResult {
   totalPages: number;
 }
 
-interface FacilityCourtsProps {
-  facilityId: string;
+interface CourtRateOverride {
+  courtId: string;
+  hourlyRate: number;
 }
 
-export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
+interface TariffDto {
+  id: string;
+  facilityId: string;
+  baseHourlyRate: number;
+  courtOverrides: CourtRateOverride[] | null;
+}
+
+interface FacilityCourtsProps {
+  facilityId: string;
+  facilitySlug: string;
+}
+
+export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCourtsProps) {
   const [courts, setCourts] = useState<Court[]>([]);
+  const [tariffs, setTariffs] = useState<TariffDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -34,13 +48,38 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
 
+  const activeTariff = tariffs[0] ?? null;
+
+  const formatRate = (rate?: number | null) => {
+    if (rate === null || rate === undefined || Number.isNaN(rate)) {
+      return 'Brak';
+    }
+
+    return `${rate.toFixed(2)} PLN / h`;
+  };
+
   const fetchCourts = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${facilityId}/courts`, {
-        params: { PageNumber: 1, PageSize: 30 }
-      });
-      setCourts(res.data.items || []);
+      const [courtsResult, tariffsResult] = await Promise.allSettled([
+        apiClient.get<CourtDtoPagedResult>(`/api/facilities/${facilitySlug}/courts`, {
+          params: { PageNumber: 1, PageSize: 30 }
+        }),
+        apiClient.get<TariffDto[]>(`/api/tariffs/facility/${facilityId}`)
+      ]);
+
+      if (courtsResult.status === 'fulfilled') {
+        setCourts(courtsResult.value.data.items || []);
+      } else {
+        throw courtsResult.reason;
+      }
+
+      if (tariffsResult.status === 'fulfilled') {
+        setTariffs(tariffsResult.value.data || []);
+      } else {
+        setTariffs([]);
+      }
+
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Nie udało się załadować korty');
@@ -51,7 +90,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
 
   useEffect(() => {
     fetchCourts();
-  }, [facilityId]);
+  }, [facilitySlug]);
 
   if (loading) {
     return <div className="text-center py-3"><Spinner size="sm" /> Ładowanie kortów...</div>;
@@ -63,8 +102,13 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
 
   return (
     <div className="p-3 bg-card border-top border-secondary">
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h6 className="fw-bold mb-0">Przypisane korty</h6>
+      <div className="d-flex justify-content-between align-items-center mb-3 gap-3 flex-wrap">
+        <div>
+          <h6 className="fw-bold mb-1">Przypisane korty</h6>
+          <div className="text-secondary small">
+            Przelicznik obiektu: <span className="text-body fw-semibold">{formatRate(activeTariff?.baseHourlyRate)}</span>
+          </div>
+        </div>
         <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
           + Dodaj kort
         </Button>
@@ -78,15 +122,21 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
             <tr>
               <th>Nazwa</th>
               <th>Typ</th>
+              <th>Stawka godzinowa</th>
               <th>Aktywny</th>
               <th className="text-end">Akcje</th>
             </tr>
           </thead>
           <tbody>
             {courts.map(c => (
+              (() => {
+                const courtRate = activeTariff?.courtOverrides?.find(override => override.courtId === c.id)?.hourlyRate ?? activeTariff?.baseHourlyRate;
+
+                return (
               <tr key={c.id}>
                 <td>{c.name}</td>
                 <td>{c.surfaceType}</td>
+                <td>{formatRate(courtRate)}</td>
                 <td>{c.isActive ? 'Tak' : 'Nie'}</td>
                 <td className="text-end">
                   <Button 
@@ -114,6 +164,8 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
                   </Button>
                 </td>
               </tr>
+                );
+              })()
             ))}
           </tbody>
         </Table>
@@ -123,7 +175,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onSuccess={fetchCourts}
-        facilityId={facilityId}
+        facilityId={facilitySlug}
       />
 
       <EditCourtModal
@@ -133,7 +185,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
           setSelectedCourt(null);
         }}
         onSuccess={fetchCourts}
-        facilityId={facilityId}
+        facilityId={facilitySlug}
         court={selectedCourt}
       />
 
@@ -144,7 +196,7 @@ export default function FacilityCourts({ facilityId }: FacilityCourtsProps) {
           setSelectedCourt(null);
         }}
         onSuccess={fetchCourts}
-        facilityId={facilityId}
+        facilityId={facilitySlug}
         court={selectedCourt}
       />
     </div>

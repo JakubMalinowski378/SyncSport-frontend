@@ -6,7 +6,7 @@ import apiClient from '../../../services/apiClient';
 interface CreateFacilityModalProps {
   show: boolean;
   onHide: () => void;
-  onSuccess: () => void;
+  onSuccess: (facilityId: string) => void;
 }
 
 interface WeeklyHour {
@@ -104,12 +104,12 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
         formData.append('images', img);
       });
 
-      await apiClient.post('/api/facilities', formData, {
+      const res = await apiClient.post<string>('/api/facilities', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      onSuccess();
+      onSuccess(res.data);
       onHide();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Nie udało się utworzyć obiektu');

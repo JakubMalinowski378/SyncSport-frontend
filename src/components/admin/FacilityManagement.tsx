@@ -3,6 +3,7 @@ import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 
 import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
 import apiClient from '../../services/apiClient';
 import CreateFacilityModal from './modals/CreateFacilityModal';
+import CreateTariffModal from './modals/CreateTariffModal';
 import EditFacilityModal from './modals/EditFacilityModal';
 import DeleteFacilityModal from './modals/DeleteFacilityModal';
 import FacilityCourts from './FacilityCourts';
@@ -10,6 +11,7 @@ import { BsTrash } from 'react-icons/bs';
 
 export interface Facility {
   id: string;
+  slug?: string | null;
   name: string | null;
   address: string | null;
 }
@@ -36,6 +38,8 @@ export default function FacilityManagement() {
   const [sortOrder, setSortOrder] = useState('asc');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateTariffModal, setShowCreateTariffModal] = useState(false);
+  const [createdFacilityId, setCreatedFacilityId] = useState('');
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -112,14 +116,14 @@ export default function FacilityManagement() {
             <Col xs={12} sm={8} md={6} lg={4}>
               <Form.Control
                 type="text"
-                placeholder="Search facilities..."
+                placeholder="Szukaj..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="bg-card text-body border-secondary"
               />
             </Col>
             <Col xs="auto">
-              <Button type="submit" variant="primary" disabled={loading}>Search</Button>
+              <Button type="submit" variant="primary" disabled={loading}>Szukaj</Button>
             </Col>
           </Row>
         </Form>
@@ -180,7 +184,7 @@ export default function FacilityManagement() {
                   {expandedFacilityId === f.id && (
                     <tr>
                       <td colSpan={4} className="p-0 border-bottom border-secondary">
-                        <FacilityCourts facilityId={f.id} />
+                        <FacilityCourts facilityId={f.id} facilitySlug={f.slug || f.id} />
                       </td>
                     </tr>
                   )}
@@ -204,7 +208,21 @@ export default function FacilityManagement() {
       <CreateFacilityModal
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
+        onSuccess={facilityId => {
+          setCreatedFacilityId(facilityId);
+          setShowCreateTariffModal(true);
+          fetchFacilities();
+        }}
+      />
+
+      <CreateTariffModal
+        show={showCreateTariffModal}
+        onHide={() => {
+          setShowCreateTariffModal(false);
+          setCreatedFacilityId('');
+        }}
         onSuccess={fetchFacilities}
+        facilityId={createdFacilityId}
       />
 
       <EditFacilityModal

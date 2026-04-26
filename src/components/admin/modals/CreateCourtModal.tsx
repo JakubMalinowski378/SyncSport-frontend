@@ -68,13 +68,13 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
     <Modal show={show} onHide={onHide} onExited={handleExited} centered>
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton className="bg-card border-secondary">
-          <Modal.Title>Add New Court</Modal.Title>
+          <Modal.Title>Dodaj nowy kort</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}
           
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Nazwa</Form.Label>
             <Form.Control
               type="text"
               required
@@ -85,7 +85,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
           </Form.Group>
           
           <Form.Group className="mb-3">
-            <Form.Label>Surface Type</Form.Label>
+            <Form.Label>Typ nawierzchni</Form.Label>
             <Form.Control
               type="text"
               required
@@ -96,19 +96,19 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Override Reservation Duration (minutes)</Form.Label>
+            <Form.Label>Zmiana czasu rezerwacji (minuty)</Form.Label>
             <Form.Control
               type="number"
               min="1"
               value={overrideReservationDuration}
               onChange={e => setOverrideReservationDuration(e.target.value ? parseInt(e.target.value) : '')}
-              placeholder="Leave empty to use facility's duration"
+              placeholder="Pozostaw puste, aby użyć czasu obiektu"
               className="bg-card text-body border-secondary"
             />
           </Form.Group>
           
           <Form.Group className="mb-3">
-            <Form.Label>Court Images</Form.Label>
+            <Form.Label>Zdjęcia kortu</Form.Label>
             <Form.Control
               type="file"
               multiple
@@ -130,7 +130,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
                       size="sm"
                       className="position-absolute top-0 end-0 p-0"
                       style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
-                      title="Remove image"
+                      title="Usuń zdjęcie"
                       onClick={() => removeImage(idx)}
                     >
                       &times;
@@ -143,10 +143,10 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
         </Modal.Body>
         <Modal.Footer className="bg-card border-secondary">
           <Button variant="secondary" onClick={onHide}>
-            Cancel
+            Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Add Court'}
+            {loading ? <Spinner size="sm" /> : 'Dodaj kort'}
           </Button>
         </Modal.Footer>
       </Form>

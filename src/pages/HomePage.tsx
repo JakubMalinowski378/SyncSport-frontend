@@ -257,7 +257,7 @@ export default function HomePage() {
 
                       <div className="mt-3 d-grid">
                         <Link to={`/obiekt/${encodeURIComponent(facility.slug || facility.id)}`} className="btn btn-outline-primary rounded-pill">
-                          <BsCalendarCheck className="me-1" /> Sprawdź dostępność
+                          <BsCalendarCheck className="me-1" /> Zobacz boiska
                         </Link>
                       </div>
                     </Card.Body>
