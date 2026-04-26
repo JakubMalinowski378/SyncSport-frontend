@@ -214,7 +214,7 @@ export default function HomePage() {
           <Row className="g-4">
             {facilities.map((facility) => {
               const imageUrl = getMainImageUrl(facility.images);
-              const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} min rezerwacji` : 'Elastyczne sloty';
+              const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} minutowe rezerwacje` : 'Elastyczne sloty';
 
               return (
                 <Col key={facility.id} md={6} lg={4}>

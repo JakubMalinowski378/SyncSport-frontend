@@ -13,22 +13,22 @@ interface DeleteCourtModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: () => void;
-  facilityId: string;
+  facilitySlug: string;
   court: Court | null;
 }
 
-export default function DeleteCourtModal({ show, onHide, onSuccess, facilityId, court }: DeleteCourtModalProps) {
+export default function DeleteCourtModal({ show, onHide, onSuccess, facilitySlug, court }: DeleteCourtModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
-    if (!court || !facilityId) return;
+    if (!court || !facilitySlug) return;
     
     setLoading(true);
     setError(null);
     
     try {
-      await apiClient.delete(`/api/facilities/${facilityId}/courts/${court.id}`);
+      await apiClient.delete(`/api/facilities/${facilitySlug}/courts/${court.id}`);
       onSuccess();
       onHide();
     } catch (err: any) {

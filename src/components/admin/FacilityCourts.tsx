@@ -175,7 +175,8 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onSuccess={fetchCourts}
-        facilityId={facilitySlug}
+        facilitySlug={facilitySlug}
+        facilityId={facilityId}
       />
 
       <EditCourtModal
@@ -185,7 +186,7 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
           setSelectedCourt(null);
         }}
         onSuccess={fetchCourts}
-        facilityId={facilitySlug}
+        facilitySlug={facilitySlug}
         court={selectedCourt}
       />
 
@@ -196,7 +197,7 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
           setSelectedCourt(null);
         }}
         onSuccess={fetchCourts}
-        facilityId={facilitySlug}
+        facilitySlug={facilitySlug}
         court={selectedCourt}
       />
     </div>

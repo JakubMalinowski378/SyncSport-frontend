@@ -1,5 +1,57 @@
 import axios from 'axios';
 
+const toErrorString = (value: unknown): string | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    const arrayMessages = value
+      .map(item => toErrorString(item))
+      .filter((item): item is string => Boolean(item));
+
+    return arrayMessages.length > 0 ? arrayMessages.join(', ') : null;
+  }
+
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+
+    // Common ProblemDetails/validation fields.
+    const primary = toErrorString(record.detail) || toErrorString(record.title) || toErrorString(record.message);
+    if (primary) {
+      return primary;
+    }
+
+    if (record.errors && typeof record.errors === 'object') {
+      const errors = record.errors as Record<string, unknown>;
+      const messages = Object.values(errors)
+        .map(item => toErrorString(item))
+        .filter((item): item is string => Boolean(item));
+
+      if (messages.length > 0) {
+        return messages.join(', ');
+      }
+    }
+
+    const nestedMessages = Object.values(record)
+      .map(item => toErrorString(item))
+      .filter((item): item is string => Boolean(item));
+
+    return nestedMessages.length > 0 ? nestedMessages.join(', ') : null;
+  }
+
+  return null;
+};
+
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5126',
   headers: { 'Content-Type': 'application/json' },
@@ -31,6 +83,19 @@ const processQueue = (error: any, token: string | null = null) => {
 apiClient.interceptors.response.use(
   res => res,
   async err => {
+    if (err?.response?.data) {
+      const normalizedMessage = toErrorString(err.response.data);
+      if (normalizedMessage) {
+        if (typeof err.response.data === 'object' && err.response.data !== null) {
+          err.response.data.detail = normalizedMessage;
+          err.response.data.message = normalizedMessage;
+          err.response.data.title = normalizedMessage;
+        } else {
+          err.response.data = { detail: normalizedMessage, message: normalizedMessage, title: normalizedMessage };
+        }
+      }
+    }
+
     const originalRequest = err.config;
 
     if (err.response?.status === 401 && !originalRequest._retry) {

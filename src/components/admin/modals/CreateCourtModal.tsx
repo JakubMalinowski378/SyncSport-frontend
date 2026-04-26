@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner } from 'react-bootstrap';
 import apiClient from '../../../services/apiClient';
+import ImageUploadReorder from '../../shared/ImageUploadReorder';
 
 interface CreateCourtModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: () => void;
+  facilitySlug: string;
   facilityId: string;
 }
 
-export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }: CreateCourtModalProps) {
+export default function CreateCourtModal({ show, onHide, onSuccess, facilitySlug, facilityId }: CreateCourtModalProps) {
   const [name, setName] = useState('');
   const [surfaceType, setSurfaceType] = useState('');
   const [overrideReservationDuration, setOverrideReservationDuration] = useState<number | ''>('');
@@ -34,7 +36,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
 
       images.forEach(img => formData.append('images', img));
 
-      await apiClient.post(`/api/facilities/${facilityId}/courts`, formData, {
+      await apiClient.post(`/api/facilities/${facilitySlug}/courts`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       onSuccess();
@@ -52,16 +54,6 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
     setOverrideReservationDuration('');
     setImages([]);
     setError(null);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -107,39 +99,11 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
             />
           </Form.Group>
           
-          <Form.Group className="mb-3">
-            <Form.Label>Zdjęcia kortu</Form.Label>
-            <Form.Control
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageChange}
-              className="bg-card text-body border-secondary"
-            />
-            {images.length > 0 && (
-              <div className="d-flex flex-wrap gap-2 mt-2">
-                {images.map((img, idx) => (
-                  <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
-                    <img
-                      src={URL.createObjectURL(img)}
-                      alt={`preview-${idx}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      className="position-absolute top-0 end-0 p-0"
-                      style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
-                      title="Usuń zdjęcie"
-                      onClick={() => removeImage(idx)}
-                    >
-                      &times;
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Form.Group>
+          <ImageUploadReorder
+            label="Zdjęcia kortu"
+            images={images}
+            onChange={setImages}
+          />
         </Modal.Body>
         <Modal.Footer className="bg-card border-secondary">
           <Button variant="secondary" onClick={onHide}>

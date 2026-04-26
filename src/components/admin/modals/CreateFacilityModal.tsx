@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-bootstrap';
 import { BsTrash } from 'react-icons/bs';
 import apiClient from '../../../services/apiClient';
+import ImageUploadReorder from '../../shared/ImageUploadReorder';
 
 interface CreateFacilityModalProps {
   show: boolean;
@@ -133,16 +134,6 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
     setError(null);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
-
   return (
     <Modal show={show} onHide={onHide} onExited={handleExited} size="lg" centered>
       <Form onSubmit={handleSubmit}>
@@ -192,39 +183,11 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
             </Col>
           </Row>
 
-              <Form.Group className="mb-3">
-            <Form.Label>Zdjęcia obiektu</Form.Label>
-            <Form.Control
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleImageChange}
-              className="bg-card text-body border-secondary"
-            />
-            {images.length > 0 && (
-              <div className="d-flex flex-wrap gap-2 mt-2">
-                {images.map((img, idx) => (
-                  <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
-                    <img
-                      src={URL.createObjectURL(img)}
-                      alt={`preview-${idx}`}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      className="position-absolute top-0 end-0 p-0"
-                      style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
-                      title="Usuń zdjęcie"
-                      onClick={() => removeImage(idx)}
-                    >
-                      &times;
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </Form.Group>
+          <ImageUploadReorder
+            label="Zdjęcia obiektu"
+            images={images}
+            onChange={setImages}
+          />
 
           <Card className="mb-3 bg-card border-secondary">
             <Card.Header className="border-secondary fw-bold">Godziny tygodniowe</Card.Header>

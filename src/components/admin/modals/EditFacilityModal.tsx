@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-bootstrap';
 import { BsTrash } from 'react-icons/bs';
 import apiClient from '../../../services/apiClient';
+import ImageUploadReorder from '../../shared/ImageUploadReorder';
 
 interface Facility {
   id: string;
+  slug?: string | null;
   name: string | null;
   address: string | null;
 }
@@ -50,19 +52,52 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
 
   const [customDateHours, setCustomDateHours] = useState<CustomDateHour[]>([]);
   const [images, setImages] = useState<File[]>([]);
+  const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
   
   const [initialLoading, setInitialLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFacilityDetails = async (id: string) => {
+  const extractImageUrls = (value: unknown): string[] => {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+
+    return value
+      .map(item => {
+        if (typeof item === 'string') {
+          return item;
+        }
+
+        if (item && typeof item === 'object') {
+          const image = item as Record<string, unknown>;
+          const candidate = image.url ?? image.imageUrl ?? image.src ?? image.path;
+          return typeof candidate === 'string' ? candidate : null;
+        }
+
+        return null;
+      })
+      .filter((item): item is string => Boolean(item));
+  };
+
+  const urlToFile = async (imageUrl: string, index: number): Promise<File> => {
+    const response = await apiClient.get<Blob>(imageUrl, { responseType: 'blob' });
+    const blob = response.data;
+    const mimeType = blob.type || response.headers['content-type'] || 'image/jpeg';
+    const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
+
+    return new File([blob], `existing-${index}.${extension}`, { type: mimeType });
+  };
+
+  const fetchFacilityDetails = async (facilitySlug: string) => {
     setInitialLoading(true);
     try {
-      const res = await apiClient.get(`/api/facilities/${id}`);
+      const res = await apiClient.get(`/api/facilities/${facilitySlug}`);
       const data = res.data;
       setName(data.name || '');
       setAddress(data.address || '');
       setReservationDuration(data.reservationDuration || 60);
+      setExistingImageUrls(extractImageUrls(data.images));
       
       if (data.openingHours && data.openingHours.length > 0) {
         setOpeningHours(DAYS_OF_WEEK.map(day => {
@@ -90,7 +125,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
         setCustomDateHours([]);
       }
     } catch (err: any) {
-      setError('Failed to fetch facility details');
+      setError('Nie udało się pobrać szczegółów obiektu');
     } finally {
       setInitialLoading(false);
     }
@@ -98,7 +133,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
 
   useEffect(() => {
     if (facility && show) {
-      fetchFacilityDetails(facility.id);
+      fetchFacilityDetails(facility.slug || facility.id);
       setError(null);
     }
   }, [facility, show]);
@@ -153,7 +188,11 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
         isClosed: c.isClosed
       }))));
 
-      images.forEach(img => {
+      const existingImagesAsFiles = await Promise.all(
+        existingImageUrls.map((imageUrl, index) => urlToFile(imageUrl, index))
+      );
+
+      [...existingImagesAsFiles, ...images].forEach(img => {
         formData.append('images', img);
       });
 
@@ -183,17 +222,8 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
     })));
     setCustomDateHours([]);
     setImages([]);
+    setExistingImageUrls([]);
     setError(null);
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -212,7 +242,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
               <Row className="mb-3">
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Name</Form.Label>
+                    <Form.Label>Nazwa</Form.Label>
                     <Form.Control
                       type="text"
                       required
@@ -224,7 +254,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                 </Col>
                 <Col md={6}>
                   <Form.Group>
-                    <Form.Label>Address</Form.Label>
+                    <Form.Label>Adres</Form.Label>
                     <Form.Control
                       type="text"
                       required
@@ -236,7 +266,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                 </Col>
                 <Col md={12} className="mt-3">
                   <Form.Group>
-                    <Form.Label>Reservation Duration (minutes)</Form.Label>
+                    <Form.Label>Czas rezerwacji (minuty)</Form.Label>
                     <Form.Control
                       type="number"
                       required
@@ -249,42 +279,18 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                 </Col>
               </Row>
 
-              <Form.Group className="mb-3">
-                <Form.Label>Facility Images</Form.Label>
-                <Form.Control
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="bg-card text-body border-secondary"
-                />
-                {images.length > 0 && (
-                  <div className="d-flex flex-wrap gap-2 mt-2">
-                    {images.map((img, idx) => (
-                      <div key={idx} className="position-relative border border-secondary rounded p-1" style={{ width: '80px', height: '80px' }}>
-                        <img
-                          src={URL.createObjectURL(img)}
-                          alt={`preview-${idx}`}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          className="position-absolute top-0 end-0 p-0"
-                          style={{ width: '20px', height: '20px', transform: 'translate(30%, -30%)' }}
-                          title="Remove image"
-                          onClick={() => removeImage(idx)}
-                        >
-                          &times;
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </Form.Group>
+              <ImageUploadReorder
+                label="Zdjęcia obiektu"
+                images={images}
+                onChange={setImages}
+                existingImageUrls={existingImageUrls}
+                onExistingImageUrlsChange={setExistingImageUrls}
+                existingLabel="Aktualne zdjęcia"
+                removeTitle="Usuń zdjęcie"
+              />
 
               <Card className="bg-card border-secondary text-body mb-3 mt-3">
-                <Card.Header className="bg-card border-secondary fw-bold text-body">Opening Hours</Card.Header>
+                <Card.Header className="bg-card border-secondary fw-bold text-body">Godziny otwarcia</Card.Header>
                 <Card.Body>
                   {openingHours.map((h, index) => (
                     <Row key={h.dayName} className="mb-2 align-items-center">
@@ -312,7 +318,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                       <Col xs={12} md={3} className="mt-2 mt-md-0 d-flex align-items-center">
                         <Form.Check
                           type="switch"
-                          label="Closed"
+                          label="Zamknięte"
                           checked={h.isClosed}
                           onChange={e => handleOpeningHourChange(index, 'isClosed', e.target.checked)}
                         />
@@ -324,14 +330,14 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
 
               <Card className="bg-card border-secondary text-body mb-3">
                 <Card.Header className="bg-card border-secondary d-flex justify-content-between align-items-center text-body">
-                  <span className="fw-bold">Custom Date Hours</span>
+                  <span className="fw-bold">Godziny dla dat niestandardowych</span>
                   <Button variant="outline-success" size="sm" onClick={addCustomDate}>
-                    + Add Date
+                    + Dodaj datę
                   </Button>
                 </Card.Header>
                 <Card.Body>
                   {customDateHours.length === 0 ? (
-                    <div className="text-secondary small">No custom dates configured.</div>
+                    <div className="text-secondary small">Brak skonfigurowanych dat niestandardowych.</div>
                   ) : (
                     customDateHours.map((c, index) => (
                       <Row key={index} className="mb-2 align-items-center">
@@ -365,7 +371,7 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                         <Col xs={4} md={3} className="d-flex align-items-center justify-content-between">
                           <Form.Check
                             type="switch"
-                            label="Closed"
+                            label="Zamknięte"
                             checked={c.isClosed}
                             onChange={e => handleCustomDateChange(index, 'isClosed', e.target.checked)}
                           />
@@ -383,10 +389,10 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
         </Modal.Body>
         <Modal.Footer className="bg-card border-secondary">
           <Button variant="secondary" onClick={onHide}>
-            Cancel
+            Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={loading || initialLoading}>
-            {loading ? <Spinner size="sm" /> : 'Save Changes'}
+            {loading ? <Spinner size="sm" /> : 'Zapisz zmiany'}
           </Button>
         </Modal.Footer>
       </Form>
