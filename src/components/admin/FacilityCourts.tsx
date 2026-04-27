@@ -4,6 +4,7 @@ import apiClient from '../../services/apiClient';
 import CreateCourtModal from './modals/CreateCourtModal';
 import EditCourtModal from './modals/EditCourtModal';
 import DeleteCourtModal from './modals/DeleteCourtModal';
+import CreateTariffModal from './modals/CreateTariffModal';
 import { BsTrash, BsPencilSquare } from 'react-icons/bs';
 
 interface Court {
@@ -44,6 +45,7 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showTariffModal, setShowTariffModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
@@ -109,9 +111,18 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
             Cennik obiektu: <span className="text-body fw-semibold">{formatRate(activeTariff?.baseHourlyRate)}</span>
           </div>
         </div>
-        <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
-          + Dodaj kort
-        </Button>
+        <div className="d-flex align-items-center gap-2">
+          <Button
+            variant={activeTariff ? 'outline-warning' : 'outline-success'}
+            size="sm"
+            onClick={() => setShowTariffModal(true)}
+          >
+            {activeTariff ? 'Edytuj cennik' : '+ Dodaj cennik'}
+          </Button>
+          <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
+            + Dodaj kort
+          </Button>
+        </div>
       </div>
       
       {courts.length === 0 ? (
@@ -177,6 +188,15 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
         onSuccess={fetchCourts}
         facilitySlug={facilitySlug}
         facilityId={facilityId}
+      />
+
+      <CreateTariffModal
+        show={showTariffModal}
+        onHide={() => setShowTariffModal(false)}
+        onSuccess={fetchCourts}
+        facilityId={facilityId}
+        initialTariff={activeTariff}
+        courts={courts}
       />
 
       <EditCourtModal

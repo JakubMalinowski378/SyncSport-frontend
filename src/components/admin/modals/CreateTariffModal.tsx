@@ -7,18 +7,46 @@ interface CourtOverride {
   hourlyRate: string;
 }
 
+interface TariffCourtOverride {
+  courtId: string;
+  hourlyRate: number;
+}
+
+interface TariffDto {
+  id: string;
+  facilityId: string;
+  baseHourlyRate: number;
+  courtOverrides: TariffCourtOverride[] | null;
+}
+
+interface CourtOption {
+  id: string;
+  name: string | null;
+}
+
 interface CreateTariffModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: () => void;
   facilityId: string;
+  initialTariff?: TariffDto | null;
+  courts?: CourtOption[];
 }
 
-export default function CreateTariffModal({ show, onHide, onSuccess, facilityId }: CreateTariffModalProps) {
+export default function CreateTariffModal({
+  show,
+  onHide,
+  onSuccess,
+  facilityId,
+  initialTariff = null,
+  courts = []
+}: CreateTariffModalProps) {
   const [baseHourlyRate, setBaseHourlyRate] = useState('');
   const [courtOverrides, setCourtOverrides] = useState<CourtOverride[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isEditMode = Boolean(initialTariff);
 
   const addOverride = () => {
     setCourtOverrides(prev => [...prev, { courtId: '', hourlyRate: '' }]);
@@ -49,7 +77,7 @@ export default function CreateTariffModal({ show, onHide, onSuccess, facilityId 
     }
 
     if (invalidOverride) {
-      setError('Każde nadpisanie kortu musi zawierać ID kortu i stawkę godzinową.');
+      setError('Każde nadpisanie kortu musi zawierać wybrany kort i stawkę godzinową.');
       setLoading(false);
       return;
     }
@@ -77,16 +105,27 @@ export default function CreateTariffModal({ show, onHide, onSuccess, facilityId 
       return;
     }
 
-    setBaseHourlyRate('');
-    setCourtOverrides([]);
+    if (initialTariff) {
+      setBaseHourlyRate(String(initialTariff.baseHourlyRate));
+      setCourtOverrides(
+        (initialTariff.courtOverrides || []).map(override => ({
+          courtId: override.courtId,
+          hourlyRate: String(override.hourlyRate)
+        }))
+      );
+    } else {
+      setBaseHourlyRate('');
+      setCourtOverrides([]);
+    }
+
     setError(null);
-  }, [show, facilityId]);
+  }, [show, facilityId, initialTariff]);
 
   return (
     <Modal show={show} onHide={onHide} centered size="lg">
       <Form onSubmit={handleSubmit}>
         <Modal.Header closeButton className="bg-card border-secondary">
-          <Modal.Title>Ustaw stawki dla obiektu</Modal.Title>
+          <Modal.Title>{isEditMode ? 'Edytuj cennik obiektu' : 'Ustaw stawki dla obiektu'}</Modal.Title>
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}
@@ -120,14 +159,23 @@ export default function CreateTariffModal({ show, onHide, onSuccess, facilityId 
                 <Row key={index} className="g-2 align-items-end">
                   <Col md={6}>
                     <Form.Group>
-                      <Form.Label>ID kortu</Form.Label>
-                      <Form.Control
-                        type="text"
+                      <Form.Label>Kort</Form.Label>
+                      <Form.Select
                         required
                         value={override.courtId}
                         onChange={e => updateOverride(index, 'courtId', e.target.value)}
+                        disabled={courts.length === 0}
                         className="bg-card text-body border-secondary"
-                      />
+                      >
+                        <option value="">
+                          {courts.length === 0 ? 'Brak dostępnych kortów' : 'Wybierz kort'}
+                        </option>
+                        {courts.map(court => (
+                          <option key={court.id} value={court.id}>
+                            {court.name || `Kort (${court.id.slice(0, 8)})`}
+                          </option>
+                        ))}
+                      </Form.Select>
                     </Form.Group>
                   </Col>
                   <Col md={4}>
@@ -159,7 +207,7 @@ export default function CreateTariffModal({ show, onHide, onSuccess, facilityId 
             Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Zapisz stawki'}
+            {loading ? <Spinner size="sm" /> : isEditMode ? 'Zapisz zmiany cennika' : 'Zapisz stawki'}
           </Button>
         </Modal.Footer>
       </Form>
