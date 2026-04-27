@@ -35,8 +35,8 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilitySlug
       }
 
       images.forEach(img => formData.append('images', img));
-
-      await apiClient.post(`/api/facilities/${facilitySlug}/courts`, formData, {
+      
+      await apiClient.post(`/api/facilities/${facilityId}/courts`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       onSuccess();

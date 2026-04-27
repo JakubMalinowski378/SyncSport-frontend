@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Card, Spinner, Alert, Form, Button, Modal } from 'react-bootstrap';
-import dayjs from 'dayjs';
+import { useParams, Link } from 'react-router-dom';
+import { Container, Row, Col, Card, Spinner, Alert, Badge } from 'react-bootstrap';
 import apiClient from '../services/apiClient';
-import { useAuth } from '../hooks/useAuth';
+import { BsChevronLeft, BsChevronRight, BsImages } from 'react-icons/bs';
 
 interface Court {
   id: string;
+  slug?: string | null;
   name: string | null;
   surfaceType: string | null;
   isActive: boolean;
+  images?: unknown[] | null;
 }
 
 interface CourtDtoPagedResult {
@@ -18,42 +19,111 @@ interface CourtDtoPagedResult {
 
 interface Facility {
   id: string;
+  slug?: string | null;
   name: string | null;
   address: string | null;
-  images?: string[] | null;
+  images?: (string | FacilityImage)[] | null;
 }
 
-interface CourtAvailabilityDto {
-  courtId: string;
-  courtName: string | null;
-  availableStartTimes: string[] | null;
-}
-
-interface AvailableSlotsResponse {
-  date: string;
-  courts: CourtAvailabilityDto[] | null;
+interface FacilityImage {
+  url: string;
+  isMain?: boolean;
 }
 
 export default function FacilityCourtsPage() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
   
   const [courts, setCourts] = useState<Court[]>([]);
   const [facility, setFacility] = useState<Facility | null>(null);
   
-  const [selectedDate, setSelectedDate] = useState<string>(dayjs().format('YYYY-MM-DD'));
-  const [slots, setSlots] = useState<CourtAvailabilityDto[]>([]);
-  
   const [loading, setLoading] = useState(true);
-  const [slotsLoading, setSlotsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [activeCourtImageIndexes, setActiveCourtImageIndexes] = useState<Record<string, number>>({});
 
-  const [bookingCourt, setBookingCourt] = useState<Court | null>(null);
-  const [bookingTime, setBookingTime] = useState<string | null>(null);
-  const [bookingLoading, setBookingLoading] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
-  const [bookingSuccess, setBookingSuccess] = useState<string | null>(null);
+  const getFacilityImageUrls = (images?: (string | FacilityImage)[] | null) => {
+    if (!images || images.length === 0) {
+      return [] as string[];
+    }
+
+    const normalizedImages = images
+      .map((img) => {
+        if (typeof img === 'string') {
+          return img.trim();
+        }
+
+        return img?.url?.trim() || '';
+      })
+      .filter(Boolean);
+
+    const mainImageIndex = images.findIndex((img) => typeof img !== 'string' && img.isMain === true && !!img.url?.trim());
+
+    if (mainImageIndex <= 0) {
+      return normalizedImages;
+    }
+
+    const mainImageUrl = typeof images[mainImageIndex] !== 'string'
+      ? (images[mainImageIndex] as FacilityImage).url.trim()
+      : '';
+
+    return [
+      mainImageUrl,
+      ...normalizedImages.filter((url) => url !== mainImageUrl),
+    ];
+  };
+
+  const changeImage = (direction: 'prev' | 'next') => {
+    const imageUrls = getFacilityImageUrls(facility?.images);
+    if (imageUrls.length <= 1) {
+      return;
+    }
+
+    setActiveImageIndex((current) => (
+      direction === 'next'
+        ? (current + 1) % imageUrls.length
+        : (current - 1 + imageUrls.length) % imageUrls.length
+    ));
+  };
+
+  const getCourtImageUrls = (images?: unknown[] | null) => {
+    if (!images || images.length === 0) {
+      return [] as string[];
+    }
+
+    return images
+      .map((img) => {
+        if (typeof img === 'string') {
+          return img.trim();
+        }
+
+        if (img && typeof img === 'object') {
+          const record = img as Record<string, unknown>;
+          const candidate = record.url ?? record.imageUrl ?? record.src ?? record.path;
+          return typeof candidate === 'string' ? candidate.trim() : '';
+        }
+
+        return '';
+      })
+      .filter(Boolean);
+  };
+
+  const changeCourtImage = (courtId: string, imageCount: number, direction: 'prev' | 'next') => {
+    if (imageCount <= 1) {
+      return;
+    }
+
+    setActiveCourtImageIndexes((current) => {
+      const currentIndex = current[courtId] ?? 0;
+      const nextIndex = direction === 'next'
+        ? (currentIndex + 1) % imageCount
+        : (currentIndex - 1 + imageCount) % imageCount;
+
+      return {
+        ...current,
+        [courtId]: nextIndex,
+      };
+    });
+  };
 
   useEffect(() => {
     const fetchFacilityAndCourts = async () => {
@@ -61,6 +131,7 @@ export default function FacilityCourtsPage() {
       try {
         const facilityRes = await apiClient.get<Facility>(`/api/facilities/${slug}`);
         setFacility(facilityRes.data);
+        setActiveImageIndex(0);
 
         const courtsRes = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${slug}/courts`, {
           params: { PageNumber: 1, PageSize: 30 }
@@ -77,65 +148,8 @@ export default function FacilityCourtsPage() {
     if (slug) fetchFacilityAndCourts();
   }, [slug]);
 
-  useEffect(() => {
-    const fetchSlots = async () => {
-      if (!slug || !selectedDate) return;
-      setSlotsLoading(true);
-      try {
-        const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${slug}/available-slots`, {
-          params: { date: selectedDate }
-        });
-        setSlots(slotsRes.data.courts || []);
-      } catch (err: any) {
-        console.error('Failed to fetch available slots', err);
-        setSlots([]);
-      } finally {
-        setSlotsLoading(false);
-      }
-    };
-
-    fetchSlots();
-  }, [slug, selectedDate]);
-
-  const handleBookClick = (court: Court, time: string) => {
-    if (!user) {
-      navigate('/logowanie');
-      return;
-    }
-    setBookingCourt(court);
-    setBookingTime(time);
-    setBookingError(null);
-    setBookingSuccess(null);
-  };
-
-  const confirmBooking = async () => {
-    if (!bookingCourt || !bookingTime) return;
-    setBookingLoading(true);
-    setBookingError(null);
-    
-    // Combining selectedDate and bookingTime into standard ISO Strings
-    const startObj = dayjs(`${selectedDate}T${bookingTime}`);
-    const endObj = startObj.add(1, 'hour'); // Assuming 1 hour slots based on availableStartTimes
-
-    try {
-      await apiClient.post('/api/reservations/me', {
-        courtId: bookingCourt.id,
-        startTime: startObj.format('YYYY-MM-DDTHH:mm:ssZ'),
-        endTime: endObj.format('YYYY-MM-DDTHH:mm:ssZ')
-      });
-setBookingSuccess('Kort został zarezerwowany pomyślnie!');
-      
-      // Refresh slots
-      const slotsRes = await apiClient.get<AvailableSlotsResponse>(`/api/facilities/${slug}/available-slots`, {
-        params: { date: selectedDate }
-      });
-      setSlots(slotsRes.data.courts || []);
-    } catch (err: any) {
-        setBookingError(err.response?.data?.detail || 'Nie udało się zarezerwować kortu.');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
+  const imageUrls = getFacilityImageUrls(facility?.images);
+  const currentImageUrl = imageUrls[activeImageIndex] || imageUrls[0] || null;
 
   if (loading) {
     return (
@@ -157,76 +171,136 @@ setBookingSuccess('Kort został zarezerwowany pomyślnie!');
 
   return (
     <Container className="py-4">
-      <div className="mb-4 d-flex align-items-center justify-content-between">
-        <div className="d-flex align-items-center gap-3">
-          {facility?.images && facility.images.length > 0 && (
-            <img 
-              src={facility.images[0]} 
-              alt={facility.name || 'Facility'} 
-              style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '8px' }} 
-            />
-          )}
+      <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div className="d-flex align-items-center gap-3 flex-wrap">
+          <div className="facility-image-shell position-relative" style={{ width: '180px', borderRadius: '1rem', overflow: 'hidden' }}>
+            {currentImageUrl ? (
+              <img
+                src={currentImageUrl}
+                alt={facility?.name || 'Facility'}
+                className="facility-card-image"
+                onError={(e) => {
+                  e.currentTarget.src = 'https://placehold.co/600x400/e9ecef/6c757d?text=Sports+Facility';
+                }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            ) : (
+              <div className="facility-card-image facility-card-placeholder d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
+                <BsImages className="fs-1 text-secondary" />
+              </div>
+            )}
+
+            {imageUrls.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="facility-image-nav facility-image-nav-prev btn btn-dark btn-sm rounded-circle"
+                  aria-label="Poprzednie zdjęcie"
+                  onClick={() => changeImage('prev')}
+                >
+                  <BsChevronLeft />
+                </button>
+                <button
+                  type="button"
+                  className="facility-image-nav facility-image-nav-next btn btn-dark btn-sm rounded-circle"
+                  aria-label="Następne zdjęcie"
+                  onClick={() => changeImage('next')}
+                >
+                  <BsChevronRight />
+                </button>
+                <div className="facility-image-badge">
+                  <BsImages className="me-1" /> {activeImageIndex + 1}/{imageUrls.length}
+                </div>
+              </>
+            )}
+          </div>
+
           <div>
             <h2 className="fw-bold mb-1">{facility?.name || 'Facility'}</h2>
-            <p className="text-secondary mb-0">{facility?.address}</p>
+            <p className="text-secondary mb-0">{facility?.address || 'Adres nie podany'}</p>
+            <div className="d-flex gap-2 flex-wrap mt-2">
+              <Badge bg="secondary" className="rounded-pill">{courts.length} kortów</Badge>
+              <Badge bg="info" className="rounded-pill">{imageUrls.length} zdjęć</Badge>
+            </div>
           </div>
         </div>
         <Link to="/" className="btn btn-outline-secondary btn-sm">Powrót do wyszukiwania</Link>
       </div>
 
-      <div className="d-flex align-items-center mb-4 p-3 bg-card border border-secondary rounded shadow-sm">
-        <h5 className="mb-0 me-3">Wybierz datę:</h5>
-        <Form.Control
-          type="date"
-          value={selectedDate}
-          min={dayjs().format('YYYY-MM-DD')}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-auto border-secondary"
-          style={{ minWidth: '200px' }}
-        />
-        {slotsLoading && <Spinner animation="border" size="sm" className="ms-3 text-primary" />}
-      </div>
-
-      <h4 className="mb-3">Dostępne korty i godziny</h4>
+      <h4 className="mb-3">Korty</h4>
       {courts.length === 0 ? (
         <Alert variant="info">Do tego obiektu nie przypisano jeszcze żadnych kortów.</Alert>
       ) : (
         <Row xs={1} md={2} lg={3} className="g-4">
           {courts.map(court => {
-            const courtSlots = slots.find(s => s.courtId === court.id)?.availableStartTimes || [];
-            
+            const courtSlug = court.slug || court.id;
+            const courtImageUrls = getCourtImageUrls(court.images);
+            const activeCourtImageIndex = activeCourtImageIndexes[court.id] ?? 0;
+            const currentCourtImageUrl = courtImageUrls[activeCourtImageIndex] || courtImageUrls[0] || null;
+
             return (
               <Col key={court.id}>
                 <Card className={`h-100 shadow-sm border-secondary ${!court.isActive ? 'opacity-50' : ''}`}>
-                  <Card.Body>
-                    <Card.Title>{court.name || 'Unnamed Court'}</Card.Title>
-                    <Card.Subtitle className="mb-3 text-muted small">Nawierzchnia: {court.surfaceType}</Card.Subtitle>
-                    
-                    {!court.isActive ? (
-                      <Alert variant="secondary" className="mb-0 text-center py-2">
-                        Aktualnie nieaktywny
-                      </Alert>
+                  <div className="facility-image-shell position-relative" style={{ height: '180px' }}>
+                    {currentCourtImageUrl ? (
+                      <img
+                        src={currentCourtImageUrl}
+                        alt={court.name || 'Court'}
+                        className="facility-card-image"
+                        onError={(e) => {
+                          e.currentTarget.src = 'https://placehold.co/600x400/e9ecef/6c757d?text=Court';
+                        }}
+                      />
                     ) : (
+                      <div className="facility-card-image facility-card-placeholder d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
+                        <BsImages className="fs-1 text-secondary" />
+                      </div>
+                    )}
+
+                    {courtImageUrls.length > 1 && (
                       <>
-                        <h6 className="fw-semibold mt-3 mb-2 font-monospace text-secondary">Wolne miejsca:</h6>
-                        {courtSlots.length === 0 ? (
-                          <p className="text-muted small mb-0">Brak dostępnych miejsc na tę datę.</p>
-                        ) : (
-                          <div className="d-flex flex-wrap gap-2">
-                            {courtSlots.map(time => (
-                              <Button
-                                key={time}
-                                variant="outline-success"
-                                size="sm"
-                                onClick={() => handleBookClick(court, time)}
-                              >
-                                {time.substring(0, 5)}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
+                        <button
+                          type="button"
+                          className="facility-image-nav facility-image-nav-prev btn btn-dark btn-sm rounded-circle"
+                          aria-label="Poprzednie zdjęcie kortu"
+                          onClick={() => changeCourtImage(court.id, courtImageUrls.length, 'prev')}
+                        >
+                          <BsChevronLeft />
+                        </button>
+                        <button
+                          type="button"
+                          className="facility-image-nav facility-image-nav-next btn btn-dark btn-sm rounded-circle"
+                          aria-label="Następne zdjęcie kortu"
+                          onClick={() => changeCourtImage(court.id, courtImageUrls.length, 'next')}
+                        >
+                          <BsChevronRight />
+                        </button>
+                        <div className="facility-image-badge">
+                          <BsImages className="me-1" /> {activeCourtImageIndex + 1}/{courtImageUrls.length}
+                        </div>
                       </>
                     )}
+                  </div>
+
+                  <Card.Body>
+                    <div className="d-flex justify-content-between align-items-start gap-3 mb-2">
+                      <Card.Title className="mb-0">{court.name || 'Unnamed Court'}</Card.Title>
+                      <Badge bg={court.isActive ? 'success' : 'secondary'} className="rounded-pill">
+                        {court.isActive ? 'Aktywny' : 'Nieaktywny'}
+                      </Badge>
+                    </div>
+
+                    <div className="text-secondary small mb-2">Nawierzchnia: {court.surfaceType || 'Brak informacji'}</div>
+                    <div className="text-secondary small mb-3">Identyfikator: {court.id}</div>
+
+                    <div className="d-grid">
+                      <Link
+                        to={`/obiekt/${encodeURIComponent(slug || facility?.slug || facility?.id || '')}/${encodeURIComponent(courtSlug)}/rezerwacje`}
+                        className="btn btn-primary"
+                      >
+                        Rezerwacje
+                      </Link>
+                    </div>
                   </Card.Body>
                 </Card>
               </Col>
@@ -234,48 +308,6 @@ setBookingSuccess('Kort został zarezerwowany pomyślnie!');
           })}
         </Row>
       )}
-
-      {/* Booking Modal */}
-      <Modal show={!!bookingCourt} onHide={() => {
-        if (!bookingLoading && !bookingSuccess) setBookingCourt(null);
-        if (bookingSuccess) setBookingCourt(null);
-      }} centered>
-        <Modal.Header closeButton={!bookingLoading} className="bg-card border-secondary">
-          <Modal.Title>Potwierdź rezerwację</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="bg-card text-body">
-          {bookingSuccess ? (
-            <Alert variant="success" className="mb-0">{bookingSuccess}</Alert>
-          ) : (
-            <>
-              {bookingError && <Alert variant="danger">{bookingError}</Alert>}
-              <p>Zamierzasz zarezerwować:</p>
-              <ul className="mb-0">
-                <li><strong>Kort:</strong> {bookingCourt?.name}</li>
-                <li><strong>Data:</strong> {dayjs(selectedDate).format('D MMMM YYYY')}</li>
-                <li><strong>Godzina:</strong> {bookingTime?.substring(0, 5)}</li>
-              </ul>
-              <p className="mt-3 text-muted small">Uwaga: Rezerwacja będzie dotyczyć 1 godziny domyślnie.</p>
-            </>
-          )}
-        </Modal.Body>
-        <Modal.Footer className="bg-card border-secondary">
-          {!bookingSuccess ? (
-            <>
-              <Button variant="secondary" onClick={() => setBookingCourt(null)} disabled={bookingLoading}>
-                Anuluj
-              </Button>
-              <Button variant="primary" onClick={confirmBooking} disabled={bookingLoading}>
-                {bookingLoading ? <Spinner size="sm" /> : 'Potwierdź rezerwację'}
-              </Button>
-            </>
-          ) : (
-            <Button variant="success" onClick={() => setBookingCourt(null)}>
-              Gotowe
-            </Button>
-          )}
-        </Modal.Footer>
-      </Modal>
     </Container>
   );
 }
