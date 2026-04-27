@@ -14,6 +14,9 @@ import {
   BsExclamationCircle,
   BsCalendarCheck,
   BsCameraFill,
+  BsChevronLeft,
+  BsChevronRight,
+  BsImages,
 } from 'react-icons/bs';
 import apiClient from '../services/apiClient';
 import '../styles/home-page.css';
@@ -53,6 +56,7 @@ export default function HomePage() {
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({});
 
   const fetchFacilities = async () => {
     setLoading(true);
@@ -110,19 +114,53 @@ export default function HomePage() {
     }
   };
 
-  const getMainImageUrl = (images?: (string | FacilityImage)[] | null) => {
+  const getFacilityImageUrls = (images?: (string | FacilityImage)[] | null) => {
     if (!images || images.length === 0) {
-      return null;
+      return [] as string[];
     }
 
-    const firstObjectImage = images.find((img): img is FacilityImage => typeof img !== 'string' && !!img?.url);
-    if (firstObjectImage) {
-      const mainObjectImage = images.find((img): img is FacilityImage => typeof img !== 'string' && img.isMain === true && !!img.url);
-      return (mainObjectImage || firstObjectImage).url;
+    const normalizedImages = images
+      .map((img) => {
+        if (typeof img === 'string') {
+          return img.trim();
+        }
+
+        return img?.url?.trim() || '';
+      })
+      .filter(Boolean);
+
+    const mainImageIndex = images.findIndex((img) => typeof img !== 'string' && img.isMain === true && !!img.url?.trim());
+
+    if (mainImageIndex <= 0) {
+      return normalizedImages;
     }
 
-    const firstStringImage = images.find((img): img is string => typeof img === 'string' && img.length > 0);
-    return firstStringImage || null;
+    const mainImageUrl = typeof images[mainImageIndex] !== 'string'
+      ? (images[mainImageIndex] as FacilityImage).url.trim()
+      : '';
+
+    return [
+      mainImageUrl,
+      ...normalizedImages.filter((url) => url !== mainImageUrl),
+    ];
+  };
+
+  const changeImageIndex = (facilityId: string, imageCount: number, direction: 'prev' | 'next') => {
+    if (imageCount <= 1) {
+      return;
+    }
+
+    setActiveImageIndexes((current) => {
+      const currentIndex = current[facilityId] ?? 0;
+      const nextIndex = direction === 'next'
+        ? (currentIndex + 1) % imageCount
+        : (currentIndex - 1 + imageCount) % imageCount;
+
+      return {
+        ...current,
+        [facilityId]: nextIndex,
+      };
+    });
   };
 
   const renderOpeningPreview = (openingHours?: OpeningHour[] | null) => {
@@ -213,27 +251,56 @@ export default function HomePage() {
         ) : (
           <Row className="g-4">
             {facilities.map((facility) => {
-              const imageUrl = getMainImageUrl(facility.images);
+              const imageUrls = getFacilityImageUrls(facility.images);
+              const activeImageIndex = activeImageIndexes[facility.id] ?? 0;
+              const imageUrl = imageUrls[activeImageIndex] || imageUrls[0] || null;
               const durationLabel = facility.reservationDuration ? `${facility.reservationDuration} minutowe rezerwacje` : 'Elastyczne sloty';
+              const hasMultipleImages = imageUrls.length > 1;
 
               return (
                 <Col key={facility.id} md={6} lg={4}>
                   <Card className="facility-card h-100 shadow-sm">
-                    {imageUrl ? (
-                      <Card.Img
-                        className="card-img-top"
-                        src={imageUrl}
-                        alt={facility.name || 'Facility image'}
-                        onError={(e) => {
-                          e.currentTarget.src = 'https://placehold.co/600x400/e9ecef/6c757d?text=Sports+Facility';
-                        }}
-                      />
-                    ) : (
-                      <div className="card-img-top d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
-                        <BsCameraFill className="fs-1 text-secondary" />
-                        <span className="ms-2 small">Brak obrazu</span>
-                      </div>
-                    )}
+                    <div className="facility-image-shell position-relative">
+                      {imageUrl ? (
+                        <img
+                          className="facility-card-image"
+                          src={imageUrl}
+                          alt={facility.name || 'Facility image'}
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://placehold.co/600x400/e9ecef/6c757d?text=Sports+Facility';
+                          }}
+                        />
+                      ) : (
+                        <div className="facility-card-image facility-card-placeholder d-flex align-items-center justify-content-center bg-secondary bg-opacity-10">
+                          <BsCameraFill className="fs-1 text-secondary" />
+                          <span className="ms-2 small">Brak obrazu</span>
+                        </div>
+                      )}
+
+                      {hasMultipleImages && (
+                        <>
+                          <button
+                            type="button"
+                            className="facility-image-nav facility-image-nav-prev btn btn-dark btn-sm rounded-circle"
+                            aria-label="Poprzednie zdjęcie"
+                            onClick={() => changeImageIndex(facility.id, imageUrls.length, 'prev')}
+                          >
+                            <BsChevronLeft />
+                          </button>
+                          <button
+                            type="button"
+                            className="facility-image-nav facility-image-nav-next btn btn-dark btn-sm rounded-circle"
+                            aria-label="Następne zdjęcie"
+                            onClick={() => changeImageIndex(facility.id, imageUrls.length, 'next')}
+                          >
+                            <BsChevronRight />
+                          </button>
+                          <div className="facility-image-badge">
+                            <BsImages className="me-1" /> {activeImageIndex + 1}/{imageUrls.length}
+                          </div>
+                        </>
+                      )}
+                    </div>
 
                     <Card.Body className="d-flex flex-column">
                       <div className="d-flex justify-content-between align-items-start mb-2 gap-2">

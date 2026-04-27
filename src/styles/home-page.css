@@ -31,14 +31,26 @@
   box-shadow: 0 1rem 2rem rgba(0, 229, 255, 0.15) !important;
 }
 
-.facility-card .card-img-top {
+.facility-image-shell {
   height: 180px;
-  object-fit: cover;
   background-color: #cfe2ff;
 }
 
-[data-bs-theme="dark"] .facility-card .card-img-top {
+[data-bs-theme="dark"] .facility-image-shell {
   background-color: #2a2a4a;
+}
+
+.facility-card-image,
+.facility-card-placeholder {
+  height: 180px;
+  object-fit: cover;
+  width: 100%;
+  display: block;
+}
+
+.facility-card-placeholder {
+  color: #6c757d;
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .badge-duration {
@@ -58,6 +70,51 @@
 .hours-preview {
   background: #f8f9fc;
   border-radius: 1rem;
+}
+
+.facility-image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  padding: 0;
+  opacity: 0.9;
+  z-index: 2;
+}
+
+.facility-image-nav:hover,
+.facility-image-nav:focus {
+  opacity: 1;
+}
+
+.facility-image-nav-prev {
+  left: 0.65rem;
+}
+
+.facility-image-nav-next {
+  right: 0.65rem;
+}
+
+.facility-image-badge {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(33, 37, 41, 0.78);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
 }
 
 [data-bs-theme="dark"] .hours-preview {
@@ -94,8 +151,23 @@
 }
 
 @media (max-width: 576px) {
-  .facility-card .card-img-top {
+  .facility-image-shell,
+  .facility-card-image,
+  .facility-card-placeholder {
     height: 150px;
+  }
+
+  .facility-image-nav {
+    width: 1.85rem;
+    height: 1.85rem;
+  }
+
+  .facility-image-nav-prev {
+    left: 0.45rem;
+  }
+
+  .facility-image-nav-next {
+    right: 0.45rem;
   }
 
   .hero-gradient {
