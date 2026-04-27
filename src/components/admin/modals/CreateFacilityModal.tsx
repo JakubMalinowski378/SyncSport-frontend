@@ -3,18 +3,15 @@ import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-boots
 import { BsTrash } from 'react-icons/bs';
 import apiClient from '../../../services/apiClient';
 import ImageUploadReorder from '../../shared/ImageUploadReorder';
+import FacilityOpeningHoursEditor, {
+  createDefaultOpeningHours
+} from '../FacilityOpeningHoursEditor';
+import type { OpeningHour } from '../FacilityOpeningHoursEditor';
 
 interface CreateFacilityModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: (facilityId: string) => void;
-}
-
-interface WeeklyHour {
-  dayOfWeek: number;
-  openTime: string;
-  closeTime: string;
-  isClosed: boolean;
 }
 
 interface CustomDateHour {
@@ -24,28 +21,13 @@ interface CustomDateHour {
   isClosed: boolean;
 }
 
-const DAYS_OF_WEEK = [
-  { value: 0, label: 'Monday' },
-  { value: 1, label: 'Tuesday' },
-  { value: 2, label: 'Wednesday' },
-  { value: 3, label: 'Thursday' },
-  { value: 4, label: 'Friday' },
-  { value: 5, label: 'Saturday' },
-  { value: 6, label: 'Sunday' }
-];
-
 export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateFacilityModalProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [reservationDuration, setReservationDuration] = useState<number>(60);
   
-  const [weeklyHours, setWeeklyHours] = useState<WeeklyHour[]>(
-    DAYS_OF_WEEK.map(d => ({
-      dayOfWeek: d.value,
-      openTime: '06:00',
-      closeTime: '23:00',
-      isClosed: false
-    }))
+  const [weeklyHours, setWeeklyHours] = useState<OpeningHour[]>(
+    createDefaultOpeningHours('06:00', '23:00')
   );
 
   const [customDateHours, setCustomDateHours] = useState<CustomDateHour[]>([]);
@@ -53,12 +35,6 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const handleWeeklyHourChange = (index: number, field: keyof WeeklyHour, value: any) => {
-    const newHours = [...weeklyHours];
-    newHours[index] = { ...newHours[index], [field]: value };
-    setWeeklyHours(newHours);
-  };
 
   const addCustomDate = () => {
     setCustomDateHours([
@@ -89,7 +65,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
       formData.append('address', address);
       formData.append('reservationDuration', String(reservationDuration));
       formData.append('weeklyHours', JSON.stringify(weeklyHours.map(w => ({
-        dayOfWeek: w.dayOfWeek,
+        dayName: w.dayName,
         openTime: formatTime(w.openTime),
         closeTime: formatTime(w.closeTime),
         isClosed: w.isClosed
@@ -123,12 +99,7 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
     setName('');
     setAddress('');
     setReservationDuration(60);
-    setWeeklyHours(DAYS_OF_WEEK.map(d => ({
-      dayOfWeek: d.value,
-      openTime: '08:00',
-      closeTime: '22:00',
-      isClosed: false
-    })));
+    setWeeklyHours(createDefaultOpeningHours('08:00', '22:00'));
     setCustomDateHours([]);
     setImages([]);
     setError(null);
@@ -189,44 +160,11 @@ export default function CreateFacilityModal({ show, onHide, onSuccess }: CreateF
             onChange={setImages}
           />
 
-          <Card className="mb-3 bg-card border-secondary">
-            <Card.Header className="border-secondary fw-bold">Godziny tygodniowe</Card.Header>
-            <Card.Body>
-              {weeklyHours.map((wh, idx) => (
-                <Row key={wh.dayOfWeek} className="align-items-center mb-2">
-                  <Col xs={4} md={3} className="fw-semibold">
-                    {DAYS_OF_WEEK.find(d => d.value === wh.dayOfWeek)?.label}
-                  </Col>
-                  <Col xs={4} md={3}>
-                    <Form.Check 
-                      type="switch"
-                      label="Zamknięte"
-                      checked={wh.isClosed}
-                      onChange={e => handleWeeklyHourChange(idx, 'isClosed', e.target.checked)}
-                    />
-                  </Col>
-                  <Col xs={6} md={3} className="mt-2 mt-md-0">
-                    <Form.Control
-                      type="time"
-                      value={wh.openTime}
-                      disabled={wh.isClosed}
-                      onChange={e => handleWeeklyHourChange(idx, 'openTime', e.target.value)}
-                      className="bg-card text-body border-secondary"
-                    />
-                  </Col>
-                  <Col xs={6} md={3} className="mt-2 mt-md-0">
-                    <Form.Control
-                      type="time"
-                      value={wh.closeTime}
-                      disabled={wh.isClosed}
-                      onChange={e => handleWeeklyHourChange(idx, 'closeTime', e.target.value)}
-                      className="bg-card text-body border-secondary"
-                    />
-                  </Col>
-                </Row>
-              ))}
-            </Card.Body>
-          </Card>
+          <FacilityOpeningHoursEditor
+            openingHours={weeklyHours}
+            onChange={setWeeklyHours}
+            title="Godziny tygodniowe"
+          />
 
           <Card className="bg-card border-secondary">
             <Card.Header className="d-flex justify-content-between align-items-center border-secondary fw-bold">

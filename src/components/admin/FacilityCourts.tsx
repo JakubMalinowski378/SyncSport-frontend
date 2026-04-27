@@ -106,7 +106,7 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
         <div>
           <h6 className="fw-bold mb-1">Przypisane korty</h6>
           <div className="text-secondary small">
-            Przelicznik obiektu: <span className="text-body fw-semibold">{formatRate(activeTariff?.baseHourlyRate)}</span>
+            Cennik obiektu: <span className="text-body fw-semibold">{formatRate(activeTariff?.baseHourlyRate)}</span>
           </div>
         </div>
         <Button variant="success" size="sm" onClick={() => setShowCreateModal(true)}>
@@ -186,7 +186,7 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
           setSelectedCourt(null);
         }}
         onSuccess={fetchCourts}
-        facilitySlug={facilitySlug}
+        facilityId={facilityId}
         court={selectedCourt}
       />
 

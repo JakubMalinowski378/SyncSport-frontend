@@ -16,13 +16,12 @@ interface EditCourtModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: () => void;
-  facilitySlug: string;
+  facilityId: string;
   court: Court | null;
 }
 
-export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, court }: EditCourtModalProps) {
+export default function EditCourtModal({ show, onHide, onSuccess, facilityId, court }: EditCourtModalProps) {
   const [name, setName] = useState('');
-  const [surfaceType, setSurfaceType] = useState('');
   const [overrideReservationDuration, setOverrideReservationDuration] = useState<number | ''>('');
   const [isActive, setIsActive] = useState(true);
   const [images, setImages] = useState<File[]>([]);
@@ -65,7 +64,6 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, 
   useEffect(() => {
     if (court && show) {
       setName(court.name || '');
-      setSurfaceType(court.surfaceType || '');
       setOverrideReservationDuration(court.overrideReservationDuration ?? '');
       setIsActive(court.isActive);
       setExistingImageUrls(extractImageUrls(court.images));
@@ -75,14 +73,15 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!court || !facilitySlug) return;
+    if (!court || !facilityId) return;
 
     setLoading(true);
     setError(null);
     try {
       const formData = new FormData();
+      formData.append('facilityId', facilityId);
+      formData.append('courtId', court.id);
       formData.append('name', name);
-      formData.append('surfaceType', surfaceType);
       
       if (overrideReservationDuration !== '') {
         formData.append('overrideReservationDuration', String(overrideReservationDuration));
@@ -96,7 +95,11 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, 
 
       [...existingImagesAsFiles, ...images].forEach(img => formData.append('images', img));
 
-      await apiClient.put(`/api/facilities/${facilitySlug}/courts/${court.id}`, formData, {
+      if (existingImageUrls.length + images.length > 0) {
+        formData.append('mainImageIndex', '0');
+      }
+
+      await apiClient.put(`/api/facilities/${facilityId}/courts/${court.id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       onSuccess();
@@ -110,7 +113,6 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, 
 
   const handleExited = () => {
     setName('');
-    setSurfaceType('');
     setOverrideReservationDuration('');
     setIsActive(true);
     setImages([]);
@@ -138,17 +140,6 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilitySlug, 
             />
           </Form.Group>
           
-          <Form.Group className="mb-3">
-            <Form.Label>Surface Type</Form.Label>
-            <Form.Control
-              type="text"
-              required
-              value={surfaceType}
-              onChange={e => setSurfaceType(e.target.value)}
-              className="bg-card text-body border-secondary"
-            />
-          </Form.Group>
-
           <Form.Group className="mb-3">
             <Form.Label>Override Reservation Duration (minutes)</Form.Label>
             <Form.Control

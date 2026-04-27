@@ -3,6 +3,10 @@ import { Modal, Button, Form, Alert, Spinner, Row, Col, Card } from 'react-boots
 import { BsTrash } from 'react-icons/bs';
 import apiClient from '../../../services/apiClient';
 import ImageUploadReorder from '../../shared/ImageUploadReorder';
+import FacilityOpeningHoursEditor, {
+  createDefaultOpeningHours
+} from '../FacilityOpeningHoursEditor';
+import type { OpeningHour } from '../FacilityOpeningHoursEditor';
 
 interface Facility {
   id: string;
@@ -18,13 +22,6 @@ interface EditFacilityModalProps {
   facility: Facility | null;
 }
 
-interface OpeningHour {
-  dayName: string;
-  openTime: string;
-  closeTime: string;
-  isClosed: boolean;
-}
-
 interface CustomDateHour {
   date: string;
   openTime: string;
@@ -32,27 +29,19 @@ interface CustomDateHour {
   isClosed: boolean;
 }
 
-const DAYS_OF_WEEK = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
-];
-
 export default function EditFacilityModal({ show, onHide, onSuccess, facility }: EditFacilityModalProps) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [reservationDuration, setReservationDuration] = useState<number>(60);
   
   const [openingHours, setOpeningHours] = useState<OpeningHour[]>(
-    DAYS_OF_WEEK.map(dayName => ({
-      dayName,
-      openTime: '08:00',
-      closeTime: '22:00',
-      isClosed: false
-    }))
+    createDefaultOpeningHours('08:00', '22:00')
   );
 
   const [customDateHours, setCustomDateHours] = useState<CustomDateHour[]>([]);
   const [images, setImages] = useState<File[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
+  const [initialExistingImageUrls, setInitialExistingImageUrls] = useState<string[]>([]);
   
   const [initialLoading, setInitialLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,15 +69,6 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       .filter((item): item is string => Boolean(item));
   };
 
-  const urlToFile = async (imageUrl: string, index: number): Promise<File> => {
-    const response = await apiClient.get<Blob>(imageUrl, { responseType: 'blob' });
-    const blob = response.data;
-    const mimeType = blob.type || response.headers['content-type'] || 'image/jpeg';
-    const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
-
-    return new File([blob], `existing-${index}.${extension}`, { type: mimeType });
-  };
-
   const fetchFacilityDetails = async (facilitySlug: string) => {
     setInitialLoading(true);
     try {
@@ -97,20 +77,23 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       setName(data.name || '');
       setAddress(data.address || '');
       setReservationDuration(data.reservationDuration || 60);
-      setExistingImageUrls(extractImageUrls(data.images));
+      const imageUrls = extractImageUrls(data.images);
+      setExistingImageUrls(imageUrls);
+      setInitialExistingImageUrls(imageUrls);
       
       if (data.openingHours && data.openingHours.length > 0) {
-        setOpeningHours(DAYS_OF_WEEK.map(day => {
-          const loaded = data.openingHours.find((h: any) => h.dayName === day);
+        const defaults = createDefaultOpeningHours('08:00', '22:00');
+        setOpeningHours(defaults.map(day => {
+          const loaded = data.openingHours.find((h: any) => h.dayName === day.dayName);
           if (loaded) {
             return {
-              dayName: day,
+              dayName: day.dayName,
               openTime: loaded.openTime.substring(0, 5),
               closeTime: loaded.closeTime.substring(0, 5),
               isClosed: loaded.isClosed
             };
           }
-          return { dayName: day, openTime: '08:00', closeTime: '22:00', isClosed: false };
+          return day;
         }));
       }
       
@@ -137,12 +120,6 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
       setError(null);
     }
   }, [facility, show]);
-
-  const handleOpeningHourChange = (index: number, field: keyof OpeningHour, value: any) => {
-    const newHours = [...openingHours];
-    newHours[index] = { ...newHours[index], [field]: value };
-    setOpeningHours(newHours);
-  };
 
   const addCustomDate = () => {
     setCustomDateHours([
@@ -171,11 +148,11 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
     setError(null);
     try {
       const formData = new FormData();
-      formData.append('id', facility.id);
+      formData.append('facilityId', facility.id);
       formData.append('name', name);
       formData.append('address', address);
       formData.append('reservationDuration', String(reservationDuration));
-      formData.append('openingHours', JSON.stringify(openingHours.map(w => ({
+      formData.append('weeklyHours', JSON.stringify(openingHours.map(w => ({
         dayName: w.dayName,
         openTime: formatTime(w.openTime),
         closeTime: formatTime(w.closeTime),
@@ -188,13 +165,21 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
         isClosed: c.isClosed
       }))));
 
-      const existingImagesAsFiles = await Promise.all(
-        existingImageUrls.map((imageUrl, index) => urlToFile(imageUrl, index))
-      );
-
-      [...existingImagesAsFiles, ...images].forEach(img => {
+      images.forEach(img => {
         formData.append('images', img);
       });
+
+      const removedImageUrls = initialExistingImageUrls.filter(
+        imageUrl => !existingImageUrls.includes(imageUrl)
+      );
+
+      removedImageUrls.forEach(imageUrl => {
+        formData.append('removedImageUrls', imageUrl);
+      });
+
+      if (existingImageUrls.length + images.length > 0) {
+        formData.append('mainImageIndex', '0');
+      }
 
       await apiClient.put(`/api/facilities/${facility.id}`, formData, {
         headers: {
@@ -214,15 +199,11 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
     setName('');
     setAddress('');
     setReservationDuration(60);
-    setOpeningHours(DAYS_OF_WEEK.map(dayName => ({
-      dayName,
-      openTime: '08:00',
-      closeTime: '22:00',
-      isClosed: false
-    })));
+    setOpeningHours(createDefaultOpeningHours('08:00', '22:00'));
     setCustomDateHours([]);
     setImages([]);
     setExistingImageUrls([]);
+    setInitialExistingImageUrls([]);
     setError(null);
   };
 
@@ -289,44 +270,11 @@ export default function EditFacilityModal({ show, onHide, onSuccess, facility }:
                 removeTitle="Usuń zdjęcie"
               />
 
-              <Card className="bg-card border-secondary text-body mb-3 mt-3">
-                <Card.Header className="bg-card border-secondary fw-bold text-body">Godziny otwarcia</Card.Header>
-                <Card.Body>
-                  {openingHours.map((h, index) => (
-                    <Row key={h.dayName} className="mb-2 align-items-center">
-                      <Col xs={4} md={3} className="fw-semibold">
-                        {h.dayName}
-                      </Col>
-                      <Col xs={4} md={3}>
-                        <Form.Control
-                          type="time"
-                          value={h.openTime}
-                          onChange={e => handleOpeningHourChange(index, 'openTime', e.target.value)}
-                          disabled={h.isClosed}
-                          className="bg-card text-body border-secondary"
-                        />
-                      </Col>
-                      <Col xs={4} md={3}>
-                        <Form.Control
-                          type="time"
-                          value={h.closeTime}
-                          onChange={e => handleOpeningHourChange(index, 'closeTime', e.target.value)}
-                          disabled={h.isClosed}
-                          className="bg-card text-body border-secondary"
-                        />
-                      </Col>
-                      <Col xs={12} md={3} className="mt-2 mt-md-0 d-flex align-items-center">
-                        <Form.Check
-                          type="switch"
-                          label="Zamknięte"
-                          checked={h.isClosed}
-                          onChange={e => handleOpeningHourChange(index, 'isClosed', e.target.checked)}
-                        />
-                      </Col>
-                    </Row>
-                  ))}
-                </Card.Body>
-              </Card>
+              <FacilityOpeningHoursEditor
+                openingHours={openingHours}
+                onChange={setOpeningHours}
+                title="Godziny otwarcia"
+              />
 
               <Card className="bg-card border-secondary text-body mb-3">
                 <Card.Header className="bg-card border-secondary d-flex justify-content-between align-items-center text-body">

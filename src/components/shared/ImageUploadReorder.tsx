@@ -121,10 +121,12 @@ export default function ImageUploadReorder({
         className="bg-card text-body border-secondary"
       />
 
-      {normalizedExistingImageUrls.length > 0 && (
+      {(normalizedExistingImageUrls.length > 0 || previews.length > 0) && (
         <>
-          <div className="small text-secondary mt-2 mb-1">{existingLabel}</div>
-          <div className="d-flex flex-wrap gap-2">
+          {normalizedExistingImageUrls.length > 0 && (
+            <div className="small text-secondary mt-2 mb-1">{existingLabel}</div>
+          )}
+          <div className="d-flex flex-wrap gap-2 mt-2">
             {normalizedExistingImageUrls.map((imageUrl, index) => (
               <div
                 key={`${imageUrl}-${index}`}
@@ -181,66 +183,62 @@ export default function ImageUploadReorder({
                 )}
               </div>
             ))}
+
+            {previews.map((preview, index) => (
+              <div
+                key={`${preview.file.name}-${preview.file.size}-${index}`}
+                className="position-relative border border-secondary rounded p-1"
+                style={{ width: '112px' }}
+              >
+                <img
+                  src={preview.url}
+                  alt={`preview-${index}`}
+                  style={{ width: '100%', height: '80px', objectFit: 'cover' }}
+                />
+                <div
+                  className="d-grid gap-1 mt-1"
+                  style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
+                >
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="w-100 py-0"
+                    style={{ minHeight: '24px', paddingInline: '0.2rem' }}
+                    title="Przesuń w lewo"
+                    onClick={() => moveImage(index, -1)}
+                    disabled={index === 0}
+                    type="button"
+                  >
+                    ←
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="w-100 py-0"
+                    style={{ minHeight: '24px', paddingInline: '0.2rem' }}
+                    title="Przesuń w prawo"
+                    onClick={() => moveImage(index, 1)}
+                    disabled={index === previews.length - 1}
+                    type="button"
+                  >
+                    →
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="w-100 py-0"
+                    style={{ minHeight: '24px', paddingInline: '0.2rem' }}
+                    title={removeTitle}
+                    onClick={() => removeImage(index)}
+                    type="button"
+                  >
+                    ×
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </>
-      )}
-
-      {previews.length > 0 && (
-        <div className="d-flex flex-wrap gap-2 mt-2">
-          {previews.map((preview, index) => (
-            <div
-              key={`${preview.file.name}-${preview.file.size}-${index}`}
-              className="position-relative border border-secondary rounded p-1"
-              style={{ width: '112px' }}
-            >
-              <img
-                src={preview.url}
-                alt={`preview-${index}`}
-                style={{ width: '100%', height: '80px', objectFit: 'cover' }}
-              />
-              <div
-                className="d-grid gap-1 mt-1"
-                style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' }}
-              >
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  className="w-100 py-0"
-                  style={{ minHeight: '24px', paddingInline: '0.2rem' }}
-                  title="Przesuń w lewo"
-                  onClick={() => moveImage(index, -1)}
-                  disabled={index === 0}
-                  type="button"
-                >
-                  ←
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  size="sm"
-                  className="w-100 py-0"
-                  style={{ minHeight: '24px', paddingInline: '0.2rem' }}
-                  title="Przesuń w prawo"
-                  onClick={() => moveImage(index, 1)}
-                  disabled={index === previews.length - 1}
-                  type="button"
-                >
-                  →
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  className="w-100 py-0"
-                  style={{ minHeight: '24px', paddingInline: '0.2rem' }}
-                  title={removeTitle}
-                  onClick={() => removeImage(index)}
-                  type="button"
-                >
-                  ×
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
       )}
     </Form.Group>
   );
