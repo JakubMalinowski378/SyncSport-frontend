@@ -62,11 +62,14 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
       });
       
       const reservationId = response.data;
-      
-      // Temporary mock for payment redirect since it's not defined in Swagger yet
-      // You can replace this later with the actual payment endpoint if needed.
-      alert(`Rezerwacja ${reservationId} utworzona! Przekierowanie do płatności...`);
-      window.location.href = `/platnosc?reservationId=${reservationId}&price=${price || 0}`;
+
+      const stripeResponse = await apiClient.post('/api/payments/create-checkout-session', {
+        reservationId,
+        successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
+        cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
+      });
+
+      window.location.href = stripeResponse.data.url;
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Wystąpił nieoczekiwany błąd podczas rezerwacji.');
     } finally {
