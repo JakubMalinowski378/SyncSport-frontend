@@ -10,6 +10,7 @@ dayjs.extend(utc);
 dayjs.extend(isoWeek);
 dayjs.locale('pl');
 import apiClient from '../services/apiClient';
+import ReservationModal from '../components/modals/ReservationModal';
 
 interface CourtImage {
   url: string;
@@ -49,12 +50,16 @@ export default function ReservationPage() {
   const { facilitySlug, courtSlug } = useParams<{ facilitySlug: string; courtSlug: string }>();
 
   const [court, setCourt] = useState<Court | null>(null);
+  const [facilityId, setFacilityId] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState<dayjs.Dayjs>(dayjs().startOf('isoWeek'));
   const [weekReservations, setWeekReservations] = useState<WeekReservations | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  const [showModal, setShowModal] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<{startTime: string; endTime: string} | null>(null);
 
   const getCourtImageUrls = (images?: CourtImage[] | null) => {
     if (!images || images.length === 0) {
@@ -97,6 +102,9 @@ export default function ReservationPage() {
       setLoading(true);
       setError(null);
       try {
+        const facilityRes = await apiClient.get<any>(`/api/facilities/${facilitySlug}`);
+        setFacilityId(facilityRes.data.id);
+
         const courtRes = await apiClient.get<Court>(
           `/api/facilities/${facilitySlug}/courts/${courtSlug}`
         );
@@ -148,6 +156,12 @@ export default function ReservationPage() {
 
   const getDayDate = (date: string) => {
     return dayjs(date).format('DD.MM');
+  };
+
+  const handleSlotClick = (slot: Slot) => {
+    if (slot.isReserved) return;
+    setSelectedSlot({ startTime: slot.startTime, endTime: slot.endTime });
+    setShowModal(true);
   };
 
   return (
@@ -282,7 +296,11 @@ export default function ReservationPage() {
                                   <Badge
                                     bg={slot.isReserved ? 'danger' : 'success'}
                                     className="w-100 py-2"
-                                    style={{ fontSize: '0.85rem' }}
+                                    style={{ 
+                                      fontSize: '0.85rem', 
+                                      cursor: slot.isReserved ? 'not-allowed' : 'pointer' 
+                                    }}
+                                    onClick={() => handleSlotClick(slot)}
                                   >
                                     {time}
                                     <br />
@@ -304,6 +322,16 @@ export default function ReservationPage() {
               )}
             </Card.Body>
           </Card>
+
+          {court && facilityId && (
+            <ReservationModal
+              show={showModal}
+              onHide={() => setShowModal(false)}
+              facilityId={facilityId}
+              courtId={court.id}
+              slot={selectedSlot}
+            />
+          )}
         </>
       )}
     </Container>
