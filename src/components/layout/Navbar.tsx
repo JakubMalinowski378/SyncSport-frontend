@@ -43,6 +43,10 @@ export default function AppNavbar() {
                     id="account-dropdown"
                     align="end"
                   >
+                    <Dropdown.Item as={Link} to="/moje-rezerwacje" className="d-flex align-items-center gap-2">
+                      <BsCalendar3 size={16} />
+                      <span>Moje rezerwacje</span>
+                    </Dropdown.Item>
                     <Dropdown.Item as={Link} to="/profil" className="d-flex align-items-center gap-2">
                       <BsPersonCircle size={16} />
                       <span>Profil</span>

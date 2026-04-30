@@ -1,0 +1,394 @@
+import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import { Container, Card, Spinner, Alert, Table, Badge, Form, Row, Col, InputGroup } from 'react-bootstrap';
+import {
+  BsCalendarCheck,
+  BsClock,
+  BsArrowRight,
+  BsXCircle,
+  BsCheckCircle,
+  BsHourglassSplit,
+  BsSearch,
+  BsSortDown,
+  BsSortUp,
+  BsFunnel,
+} from 'react-icons/bs';
+import dayjs from 'dayjs';
+import apiClient from '../services/apiClient';
+
+/* ---- types matching swagger.json ---- */
+
+interface UserReservationResponse {
+  id: string;
+  courtId: string;
+  courtName?: string | null;
+  facilityName?: string | null;
+  startTime: string;
+  endTime: string;
+  price?: number | null;
+  status: ReservationStatus; // 0=Pending, 1=Confirmed, 2=Cancelled, 3=Completed
+}
+
+type ReservationStatus = 0 | 1 | 2 | 3;
+
+interface UserReservationResponsePagedResult {
+  items: UserReservationResponse[] | null;
+  totalCount: number;
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/* ---- helpers ---- */
+
+type SortField = 'date' | 'status' | 'price';
+type SortDir = 'asc' | 'desc';
+
+const STATUS_LABEL: Record<ReservationStatus, string> = {
+  0: 'Oczekująca',
+  1: 'Potwierdzona',
+  2: 'Anulowana',
+  3: 'Zakończona',
+};
+
+const STATUS_BADGE: Record<ReservationStatus, string> = {
+  0: 'warning',
+  1: 'success',
+  2: 'danger',
+  3: 'secondary',
+};
+
+const STATUS_ICON: Record<ReservationStatus, React.ReactNode> = {
+  0: <BsHourglassSplit />,
+  1: <BsCheckCircle />,
+  2: <BsXCircle />,
+  3: <BsCalendarCheck />,
+};
+
+const ALL_STATUSES: ReservationStatus[] = [0, 1, 2, 3];
+
+/* ---- page ---- */
+
+export default function MyReservationsPage() {
+  const [reservations, setReservations] = useState<UserReservationResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // ---- filters (client-side) ----
+  const [filterStatus, setFilterStatus] = useState<ReservationStatus | null>(null);
+  const [searchText, setSearchText] = useState('');
+
+  // ---- sorting (client-side) ----
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
+
+  const fetchReservations = async (pageNumber: number) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params: Record<string, string | number> = {
+        PageNumber: pageNumber,
+        PageSize: 10,
+        SortColumn: sortField,
+        SortOrder: sortDir,
+      };
+
+      if (searchText.trim()) {
+        params.SearchTerm = searchText.trim();
+      }
+
+      const res = await apiClient.get<UserReservationResponsePagedResult>(
+        '/api/reservations/me',
+        { params }
+      );
+
+      setReservations(res.data.items || []);
+      setTotalPages(res.data.totalPages || 1);
+      setTotalCount(res.data.totalCount || 0);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail ||
+          'Nie udało się pobrać listy rezerwacji.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReservations(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, sortField, sortDir, searchText]);
+
+  /* ---- derived: filtered reservations (status is client-side) ---- */
+
+  const filtered = useMemo(() => {
+    let result = [...reservations];
+
+    // Filter by status (client-side, API doesn't support status filter param)
+    if (filterStatus !== null) {
+      result = result.filter((r) => r.status === filterStatus);
+    }
+
+    return result;
+  }, [reservations, filterStatus]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  };
+
+  const clearFilters = () => {
+    setFilterStatus(null);
+    setSearchText('');
+    setSortField('date');
+    setSortDir('desc');
+  };
+
+  const hasActiveFilters = filterStatus !== null || searchText.trim() !== '';
+
+  return (
+    <Container className="py-5" style={{ maxWidth: '960px' }}>
+      <div className="d-flex align-items-center gap-3 mb-4">
+        <BsCalendarCheck size={28} className="text-primary-brand" />
+        <h2 className="fw-bold mb-0">Moje rezerwacje</h2>
+        {totalCount > 0 && (
+          <Badge bg="secondary" className="ms-2 fs-6">
+            {totalCount}
+          </Badge>
+        )}
+      </div>
+
+      {/* ---- Filters bar ---- */}
+      <Card className="bg-card border-secondary rounded-4 shadow-sm mb-4">
+        <Card.Body className="p-3">
+          <Row className="g-2 align-items-end">
+            {/* Search */}
+            <Col xs={12} md={4}>
+              <Form.Label className="small text-secondary mb-1">
+                <BsSearch className="me-1" />
+                Szukaj
+              </Form.Label>
+              <InputGroup size="sm">
+                <Form.Control
+                  placeholder="Nazwa obiektu, kortu..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+              </InputGroup>
+            </Col>
+
+            {/* Status filter */}
+            <Col xs={6} md={3}>
+              <Form.Label className="small text-secondary mb-1">
+                <BsFunnel className="me-1" />
+                Status
+              </Form.Label>
+              <Form.Select
+                size="sm"
+                value={filterStatus === null ? '' : filterStatus}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setFilterStatus(v === '' ? null : (Number(v) as ReservationStatus));
+                }}
+              >
+                <option value="">Wszystkie</option>
+                {ALL_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABEL[s]}
+                  </option>
+                ))}
+              </Form.Select>
+            </Col>
+
+            {/* Sorting */}
+            <Col xs={12} md={4}>
+              <Form.Label className="small text-secondary mb-1">Sortuj po</Form.Label>
+              <div className="d-flex gap-1">
+                {(['date', 'status', 'price'] as SortField[]).map((field) => (
+                  <button
+                    key={field}
+                    className={`btn btn-sm flex-grow-1 ${sortField === field ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={() => toggleSort(field)}
+                  >
+                    {field === 'date' ? 'Data' : field === 'status' ? 'Status' : 'Cena'}{' '}
+                    {sortField === field && (sortDir === 'asc' ? <BsSortUp /> : <BsSortDown />)}
+                  </button>
+                ))}
+              </div>
+            </Col>
+
+            {/* Clear */}
+            <Col xs={6} md={2} className="d-flex align-items-end">
+              {hasActiveFilters && (
+                <button className="btn btn-sm btn-outline-danger w-100" onClick={clearFilters}>
+                  Wyczyść filtry
+                </button>
+              )}
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+
+      {/* ---- Content ---- */}
+
+      {loading && (
+        <div className="text-center py-5">
+          <Spinner animation="border" variant="primary" />
+        </div>
+      )}
+
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      {!loading && reservations.length === 0 && (
+        <Card className="bg-card border-secondary rounded-4 text-center p-5">
+          <Card.Body className="d-flex flex-column align-items-center gap-3">
+            <BsCalendarCheck size={48} className="text-secondary" />
+            <h5 className="fw-semibold">Brak rezerwacji</h5>
+            <p className="text-secondary mb-3">
+              Nie masz jeszcze żadnych rezerwacji. Przeglądaj dostępne obiekty i
+              zarezerwuj kort!
+            </p>
+            <Link to="/" className="btn btn-primary">
+              Przeglądaj obiekty <BsArrowRight className="ms-1" />
+            </Link>
+          </Card.Body>
+        </Card>
+      )}
+
+      {!loading && reservations.length > 0 && (
+        <>
+          {/* Info about filtered results */}
+          {hasActiveFilters && (
+            <p className="text-secondary small mb-2">
+              Wyświetlono {filtered.length} z {reservations.length} rezerwacji (filtry aktywne)
+            </p>
+          )}
+
+          {/* Desktop table */}
+          <Card className="bg-card border-secondary rounded-4 shadow-sm d-none d-md-block">
+            <Card.Body className="p-0">
+              <Table hover className="mb-0">
+                <thead>
+                  <tr>
+                    <th className="ps-3">Data</th>
+                    <th>Godziny</th>
+                    <th>Obiekt</th>
+                    <th>Kort</th>
+                    <th>Cena</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r) => (
+                    <tr key={r.id}>
+                      <td className="ps-3 fw-semibold text-nowrap">
+                        {dayjs(r.startTime).format('DD.MM.YYYY')}
+                      </td>
+                      <td className="text-nowrap">
+                        <BsClock className="me-1 text-secondary" size={14} />
+                        {dayjs(r.startTime).format('HH:mm')} –{' '}
+                        {dayjs(r.endTime).format('HH:mm')}
+                      </td>
+                      <td>{r.facilityName || <span className="text-secondary">—</span>}</td>
+                      <td>{r.courtName || <span className="text-secondary">—</span>}</td>
+                      <td className="fw-semibold text-nowrap">
+                        {r.price != null ? `${r.price.toFixed(2)} PLN` : <span className="text-secondary">—</span>}
+                      </td>
+                      <td>
+                        <Badge bg={STATUS_BADGE[r.status]} className="d-flex align-items-center gap-1 w-fit">
+                          {STATUS_ICON[r.status]}
+                          {STATUS_LABEL[r.status]}
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center text-secondary py-4">
+                        Brak wyników dla wybranych filtrów
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </Table>
+            </Card.Body>
+          </Card>
+
+          {/* Mobile cards */}
+          <div className="d-md-none d-flex flex-column gap-3">
+            {filtered.length === 0 && (
+              <p className="text-center text-secondary py-3">
+                Brak wyników dla wybranych filtrów
+              </p>
+            )}
+            {filtered.map((r) => (
+              <Card key={r.id} className="bg-card border-secondary rounded-4 shadow-sm">
+                <Card.Body className="d-flex flex-column gap-2">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span className="fw-bold">
+                      {dayjs(r.startTime).format('DD.MM.YYYY')}
+                    </span>
+                    <Badge bg={STATUS_BADGE[r.status]} className="d-flex align-items-center gap-1">
+                      {STATUS_ICON[r.status]}
+                      {STATUS_LABEL[r.status]}
+                    </Badge>
+                  </div>
+                  <div className="text-secondary">
+                    <BsClock className="me-1" size={14} />
+                    {dayjs(r.startTime).format('HH:mm')} –{' '}
+                    {dayjs(r.endTime).format('HH:mm')}
+                  </div>
+                  <div className="d-flex flex-wrap gap-x-3 gap-1 small">
+                    {r.facilityName && (
+                      <span><span className="text-secondary">Obiekt:</span> {r.facilityName}</span>
+                    )}
+                    {r.courtName && (
+                      <span><span className="text-secondary">Kort:</span> {r.courtName}</span>
+                    )}
+                  </div>
+                  {r.price != null && (
+                    <div className="fw-bold text-primary-brand">
+                      {r.price.toFixed(2)} PLN
+                    </div>
+                  )}
+                </Card.Body>
+              </Card>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                ← Poprzednia
+              </button>
+              <span className="text-secondary">
+                Strona {page} z {totalPages}
+              </span>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Następna →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </Container>
+  );
+}

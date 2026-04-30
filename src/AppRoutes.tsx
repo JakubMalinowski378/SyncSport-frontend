@@ -12,6 +12,7 @@ import FacilityCourtsPage from './pages/FacilityCourtsPage';
 import ReservationPage from './pages/ReservationPage';
 import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
+import MyReservationsPage from './pages/MyReservationsPage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 function About() {
@@ -41,6 +42,9 @@ export default function AppRoutes() {
             <Route path="/obiekt/:facilitySlug/:courtSlug/rezerwacje" element={<ReservationPage />} />
             <Route path="/sukces" element={<PaymentSuccessPage />} />
             <Route path="/anulowano" element={<PaymentFailurePage />} />
+            <Route path="/moje-rezerwacje" element={
+              <PrivateRoute><MyReservationsPage /></PrivateRoute>
+            } />
             <Route path="/profil" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
