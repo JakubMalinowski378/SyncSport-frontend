@@ -11,11 +11,7 @@ dayjs.extend(isoWeek);
 dayjs.locale('pl');
 import apiClient from '../services/apiClient';
 import ReservationModal from '../components/modals/ReservationModal';
-
-interface CourtImage {
-  url: string;
-  isMain?: boolean;
-}
+import type { ImageDto } from '../types/ImageDto';
 
 interface Court {
   id: string;
@@ -23,7 +19,7 @@ interface Court {
   slug: string | null;
   surfaceType: string | null;
   isActive: boolean;
-  images?: CourtImage[] | null;
+  images?: ImageDto[] | null;
 }
 
 interface Slot {
@@ -57,31 +53,18 @@ export default function ReservationPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{startTime: string; endTime: string} | null>(null);
 
-  const getCourtImageUrls = (images?: CourtImage[] | null) => {
+  const getCourtImageUrls = (images?: ImageDto[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
 
-    const normalizedImages = images
+    return images
       .map((img) => img?.url?.trim() || '')
       .filter(Boolean);
-
-    const mainImageIndex = images.findIndex((img) => img.isMain === true && !!img.url?.trim());
-
-    if (mainImageIndex <= 0) {
-      return normalizedImages;
-    }
-
-    const mainImageUrl = images[mainImageIndex].url.trim();
-
-    return [
-      mainImageUrl,
-      ...normalizedImages.filter((url) => url !== mainImageUrl),
-    ];
   };
 
   const changeImage = (direction: 'prev' | 'next') => {
@@ -230,7 +213,7 @@ export default function ReservationPage() {
               <div className="d-flex align-items-center justify-content-between mb-4">
                 <h5 className="mb-0 fw-bold">Wybierz tydzień</h5>
                 <div className="d-flex gap-2">
-                  
+
                   <Button
                     variant="outline-secondary"
                     size="sm"
@@ -296,9 +279,9 @@ export default function ReservationPage() {
                                   <Badge
                                     bg={slot.isReserved ? 'danger' : 'success'}
                                     className="w-100 py-2"
-                                    style={{ 
-                                      fontSize: '0.85rem', 
-                                      cursor: slot.isReserved ? 'not-allowed' : 'pointer' 
+                                    style={{
+                                      fontSize: '0.85rem',
+                                      cursor: slot.isReserved ? 'not-allowed' : 'pointer'
                                     }}
                                     onClick={() => handleSlotClick(slot)}
                                   >

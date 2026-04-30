@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Spinner, Alert, Badge } from 'react-bootstrap';
 import apiClient from '../services/apiClient';
 import { BsChevronLeft, BsChevronRight, BsImages } from 'react-icons/bs';
+import type { ImageDto } from '../types/ImageDto';
 
 interface Court {
   id: string;
@@ -22,31 +23,26 @@ interface Facility {
   slug?: string | null;
   name: string | null;
   address: string | null;
-  images?: (string | FacilityImage)[] | null;
-}
-
-interface FacilityImage {
-  url: string;
-  isMain?: boolean;
+  images?: (string | ImageDto)[] | null;
 }
 
 export default function FacilityCourtsPage() {
   const { slug } = useParams<{ slug: string }>();
-  
+
   const [courts, setCourts] = useState<Court[]>([]);
   const [facility, setFacility] = useState<Facility | null>(null);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeCourtImageIndexes, setActiveCourtImageIndexes] = useState<Record<string, number>>({});
 
-  const getFacilityImageUrls = (images?: (string | FacilityImage)[] | null) => {
+  const getFacilityImageUrls = (images?: (string | ImageDto)[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
 
-    const normalizedImages = images
+    return images
       .map((img) => {
         if (typeof img === 'string') {
           return img.trim();
@@ -55,21 +51,6 @@ export default function FacilityCourtsPage() {
         return img?.url?.trim() || '';
       })
       .filter(Boolean);
-
-    const mainImageIndex = images.findIndex((img) => typeof img !== 'string' && img.isMain === true && !!img.url?.trim());
-
-    if (mainImageIndex <= 0) {
-      return normalizedImages;
-    }
-
-    const mainImageUrl = typeof images[mainImageIndex] !== 'string'
-      ? (images[mainImageIndex] as FacilityImage).url.trim()
-      : '';
-
-    return [
-      mainImageUrl,
-      ...normalizedImages.filter((url) => url !== mainImageUrl),
-    ];
   };
 
   const changeImage = (direction: 'prev' | 'next') => {
@@ -144,7 +125,7 @@ export default function FacilityCourtsPage() {
         setLoading(false);
       }
     };
-    
+
     if (slug) fetchFacilityAndCourts();
   }, [slug]);
 

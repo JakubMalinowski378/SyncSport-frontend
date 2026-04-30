@@ -20,6 +20,7 @@ import {
 } from 'react-icons/bs';
 import apiClient from '../services/apiClient';
 import '../styles/home-page.css';
+import type { ImageDto } from '../types/ImageDto';
 
 interface Facility {
   id: string;
@@ -28,12 +29,7 @@ interface Facility {
   address: string | null;
   reservationDuration?: number | null;
   openingHours?: OpeningHour[] | null;
-  images?: (string | FacilityImage)[] | null;
-}
-
-interface FacilityImage {
-  url: string;
-  isMain?: boolean;
+  images?: (string | ImageDto)[] | null;
 }
 
 interface OpeningHour {
@@ -114,12 +110,12 @@ export default function HomePage() {
     }
   };
 
-  const getFacilityImageUrls = (images?: (string | FacilityImage)[] | null) => {
+  const getFacilityImageUrls = (images?: (string | ImageDto)[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
 
-    const normalizedImages = images
+    return images
       .map((img) => {
         if (typeof img === 'string') {
           return img.trim();
@@ -128,21 +124,6 @@ export default function HomePage() {
         return img?.url?.trim() || '';
       })
       .filter(Boolean);
-
-    const mainImageIndex = images.findIndex((img) => typeof img !== 'string' && img.isMain === true && !!img.url?.trim());
-
-    if (mainImageIndex <= 0) {
-      return normalizedImages;
-    }
-
-    const mainImageUrl = typeof images[mainImageIndex] !== 'string'
-      ? (images[mainImageIndex] as FacilityImage).url.trim()
-      : '';
-
-    return [
-      mainImageUrl,
-      ...normalizedImages.filter((url) => url !== mainImageUrl),
-    ];
   };
 
   const changeImageIndex = (facilityId: string, imageCount: number, direction: 'prev' | 'next') => {
