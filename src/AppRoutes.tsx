@@ -10,6 +10,8 @@ import ProfilePage from './pages/ProfilePage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import FacilityCourtsPage from './pages/FacilityCourtsPage';
 import ReservationPage from './pages/ReservationPage';
+import PaymentSuccessPage from './pages/PaymentSuccessPage';
+import PaymentFailurePage from './pages/PaymentFailurePage';
 import PrivateRoute from './components/auth/PrivateRoute';
 
 function About() {
@@ -37,6 +39,8 @@ export default function AppRoutes() {
             <Route path="/reset-hasla" element={<ResetPasswordPage />} />
             <Route path="/obiekt/:slug" element={<FacilityCourtsPage />} />
             <Route path="/obiekt/:facilitySlug/:courtSlug/rezerwacje" element={<ReservationPage />} />
+            <Route path="/sukces" element={<PaymentSuccessPage />} />
+            <Route path="/anulowano" element={<PaymentFailurePage />} />
             <Route path="/profil" element={
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
