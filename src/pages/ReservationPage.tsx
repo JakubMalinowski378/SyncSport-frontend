@@ -6,12 +6,13 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import 'dayjs/locale/pl';
-dayjs.extend(utc);
-dayjs.extend(isoWeek);
-dayjs.locale('pl');
 import apiClient from '../services/apiClient';
 import ReservationModal from '../components/modals/ReservationModal';
 import type { ImageDto } from '../types/ImageDto';
+
+dayjs.extend(utc);
+dayjs.extend(isoWeek);
+dayjs.locale('pl');
 
 interface Court {
   id: string;
@@ -23,11 +24,9 @@ interface Court {
 }
 
 interface Slot {
-  reservationId: string | null;
   startTime: string;
   endTime: string;
-  isReserved: boolean;
-  status: number;
+  status: null | 'Pending' | 'Paid';
 }
 
 interface DaySlots {
@@ -141,8 +140,18 @@ export default function ReservationPage() {
     return dayjs(date).format('DD.MM');
   };
 
+  const getSlotBadge = (slot: Slot) => {
+    if (slot.status === 'Paid') {
+      return { bg: 'danger', label: 'Zajęte', clickable: false };
+    }
+    if (slot.status === 'Pending') {
+      return { bg: 'warning', label: 'Oczekuje', clickable: false };
+    }
+    return { bg: 'success', label: 'Wolne', clickable: true };
+  };
+
   const handleSlotClick = (slot: Slot) => {
-    if (slot.isReserved) return;
+    if (slot.status !== null) return;
     setSelectedSlot({ startTime: slot.startTime, endTime: slot.endTime });
     setShowModal(true);
   };
@@ -254,8 +263,8 @@ export default function ReservationPage() {
                         const allTimes = new Set<string>();
                         weekReservations!.days.forEach((day) => {
                           day.slots.forEach((slot) => {
-                            if (slot.startTime && dayjs(slot.startTime).isValid()) {
-                              const t = dayjs(slot.startTime).format('HH:mm');
+                            if (slot.startTime && dayjs.utc(slot.startTime).isValid()) {
+                              const t = dayjs.utc(slot.startTime).local().format('HH:mm');
                               allTimes.add(t);
                             }
                           });
@@ -267,27 +276,29 @@ export default function ReservationPage() {
                           <tr key={time}>
                             {weekReservations!.days.map((day) => {
                               const slot = day.slots.find(
-                                (s) => s.startTime && dayjs(s.startTime).isValid() && dayjs(s.startTime).format('HH:mm') === time
+                                (s) => s.startTime && dayjs.utc(s.startTime).isValid() && dayjs.utc(s.startTime).local().format('HH:mm') === time
                               );
 
                               if (!slot) {
                                 return <td key={`${day.date}-${time}`} className="py-2 px-1"></td>;
                               }
 
+                              const badge = getSlotBadge(slot);
+
                               return (
                                 <td key={`${day.date}-${time}`} className="py-2 px-1">
                                   <Badge
-                                    bg={slot.isReserved ? 'danger' : 'success'}
+                                    bg={badge.bg}
                                     className="w-100 py-2"
                                     style={{
                                       fontSize: '0.85rem',
-                                      cursor: slot.isReserved ? 'not-allowed' : 'pointer'
+                                      cursor: badge.clickable ? 'pointer' : 'not-allowed'
                                     }}
                                     onClick={() => handleSlotClick(slot)}
                                   >
                                     {time}
                                     <br />
-                                    {slot.isReserved ? 'Zajęte' : 'Wolne'}
+                                    {badge.label}
                                   </Badge>
                                 </td>
                               );

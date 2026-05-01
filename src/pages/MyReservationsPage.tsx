@@ -12,11 +12,11 @@ import {
   BsSortDown,
   BsSortUp,
   BsFunnel,
+  BsCreditCard,
 } from 'react-icons/bs';
 import dayjs from 'dayjs';
 import apiClient from '../services/apiClient';
 
-/* ---- types matching swagger.json ---- */
 
 interface UserReservationResponse {
   id: string;
@@ -26,7 +26,7 @@ interface UserReservationResponse {
   startTime: string;
   endTime: string;
   price?: number | null;
-  status: ReservationStatus; // 0=Pending, 1=Confirmed, 2=Cancelled, 3=Completed
+  status: ReservationStatus;
 }
 
 type ReservationStatus = 0 | 1 | 2 | 3;
@@ -77,13 +77,12 @@ export default function MyReservationsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  // ---- filters (client-side) ----
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | null>(null);
   const [searchText, setSearchText] = useState('');
 
-  // ---- sorting (client-side) ----
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   const fetchReservations = async (pageNumber: number) => {
     setLoading(true);
@@ -121,15 +120,29 @@ export default function MyReservationsPage() {
 
   useEffect(() => {
     fetchReservations(page);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, sortField, sortDir, searchText]);
 
-  /* ---- derived: filtered reservations (status is client-side) ---- */
+  const payReservation = async (reservationId: string) => {
+    setPayingId(reservationId);
+    try {
+      const stripeResponse = await apiClient.post('/api/payments/create-checkout-session', {
+        reservationId,
+        successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
+        cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
+      });
+      window.location.href = stripeResponse.data.url;
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail || 'Nie udało się rozpocząć płatności.'
+      );
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     let result = [...reservations];
 
-    // Filter by status (client-side, API doesn't support status filter param)
     if (filterStatus !== null) {
       result = result.filter((r) => r.status === filterStatus);
     }
@@ -285,6 +298,7 @@ export default function MyReservationsPage() {
                     <th>Kort</th>
                     <th>Cena</th>
                     <th>Status</th>
+                    <th className="text-end pe-3">Akcje</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -309,11 +323,27 @@ export default function MyReservationsPage() {
                           {STATUS_LABEL[r.status]}
                         </Badge>
                       </td>
+                      <td className="text-end pe-3">
+                        {r.status === 0 && (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            disabled={payingId === r.id}
+                            onClick={() => payReservation(r.id)}
+                          >
+                            {payingId === r.id ? (
+                              <Spinner as="span" animation="border" size="sm" />
+                            ) : (
+                              <BsCreditCard className="me-1" />
+                            )}
+                            Zapłać
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="text-center text-secondary py-4">
+                      <td colSpan={7} className="text-center text-secondary py-4">
                         Brak wyników dla wybranych filtrów
                       </td>
                     </tr>
@@ -359,6 +389,20 @@ export default function MyReservationsPage() {
                     <div className="fw-bold text-primary-brand">
                       {r.price.toFixed(2)} PLN
                     </div>
+                  )}
+                  {r.status === 0 && (
+                    <button
+                      className="btn btn-primary btn-sm align-self-end mt-1"
+                      disabled={payingId === r.id}
+                      onClick={() => payReservation(r.id)}
+                    >
+                      {payingId === r.id ? (
+                        <Spinner as="span" animation="border" size="sm" />
+                      ) : (
+                        <BsCreditCard className="me-1" />
+                      )}
+                      Zapłać
+                    </button>
                   )}
                 </Card.Body>
               </Card>
