@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Modal, Button, Spinner, Alert, Form } from 'react-bootstrap';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 import { useCalculatePrice } from '../../hooks/useFacilityQueries';
 import { useCreateReservation } from '../../hooks/useReservationQueries';
 import { useCreateCheckoutSession } from '../../hooks/usePaymentQueries';
@@ -42,8 +45,8 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
       const result = await calculatePriceMutation.mutateAsync({
         facilityId,
         courtId,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
+        startTime: dayjs.utc(slot.startTime).toISOString(),
+        endTime: dayjs.utc(slot.endTime).toISOString(),
       });
       setPrice(result);
     } catch (err: any) {
@@ -58,8 +61,8 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
     try {
       const reservationId = await createReservationMutation.mutateAsync({
         courtId,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
+        startTime: dayjs.utc(slot.startTime).toISOString(),
+        endTime: dayjs.utc(slot.endTime).toISOString(),
         payOnSite,
       });
 

@@ -102,12 +102,21 @@ export default function ReservationPage() {
     if (slot.status === 'Pending') {
       return { bg: 'warning', label: 'Oczekuje', clickable: false };
     }
+    const isPast = dayjs.utc(slot.startTime).isBefore(dayjs.utc());
+    if (isPast) {
+      return { bg: 'secondary', label: 'Minęło', clickable: false };
+    }
     return { bg: 'success', label: 'Wolne', clickable: true };
   };
 
   const handleSlotClick = (slot: Slot) => {
     if (slot.status !== null) return;
-    setSelectedSlot({ startTime: slot.startTime, endTime: slot.endTime });
+    // Disallow selecting slots in the past
+    if (dayjs.utc(slot.startTime).isBefore(dayjs.utc())) return;
+    setSelectedSlot({
+      startTime: dayjs.utc(slot.startTime).toISOString(),
+      endTime: dayjs.utc(slot.endTime).toISOString(),
+    });
     setShowModal(true);
   };
 
