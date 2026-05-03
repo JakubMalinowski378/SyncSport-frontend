@@ -1,54 +1,23 @@
-import { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Container, Card, Alert, Spinner, Button } from 'react-bootstrap';
 import { BsCheckCircleFill, BsArrowRight } from 'react-icons/bs';
-import apiClient from '../services/apiClient';
+import { useReservation } from '../hooks/useReservationQueries';
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const reservationId = searchParams.get('reservationId');
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [reservation, setReservation] = useState<{
-    id: string;
-    startTime: string;
-    endTime: string;
-    courtName?: string;
-    facilityName?: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!reservationId) {
-      setError('Brak identyfikatora rezerwacji.');
-      setLoading(false);
-      return;
-    }
-
-    const fetchReservation = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await apiClient.get(`/api/reservations/${reservationId}`);
-        setReservation(res.data);
-      } catch (err: any) {
-        setError(
-          err.response?.data?.detail ||
-            'Nie udało się pobrać szczegółów rezerwacji.'
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReservation();
-  }, [reservationId]);
+  const { data: reservation, isLoading: loading, error: fetchError } = useReservation(reservationId || '');
+  const error = !reservationId
+    ? 'Brak identyfikatora rezerwacji.'
+    : fetchError
+      ? (fetchError instanceof Error ? fetchError.message : 'Nie udało się pobrać szczegółów rezerwacji.')
+      : null;
 
   return (
     <Container className="py-5" style={{ maxWidth: '600px' }}>
       <Card className="bg-card border border-secondary rounded-4 shadow-sm text-center p-4">
         <Card.Body className="d-flex flex-column align-items-center gap-3">
-          {/* Success Icon */}
           <div
             className="d-flex align-items-center justify-content-center rounded-circle"
             style={{

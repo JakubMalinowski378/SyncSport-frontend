@@ -25,7 +25,6 @@ const toErrorString = (value: unknown): string | null => {
   if (typeof value === 'object') {
     const record = value as Record<string, unknown>;
 
-    // Common ProblemDetails/validation fields.
     const primary = toErrorString(record.detail) || toErrorString(record.title) || toErrorString(record.message);
     if (primary) {
       return primary;
@@ -116,23 +115,23 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refreshToken');
         const token = localStorage.getItem('token');
-        
-        const response = await axios.post(`${apiClient.defaults.baseURL}/api/accounts/refresh-token`, { 
+
+        const response = await axios.post(`${apiClient.defaults.baseURL}/api/accounts/refresh-token`, {
           jwtToken: token,
-          refreshToken: refreshToken 
+          refreshToken: refreshToken
         });
-        
+
         const newJwtToken = response.data.jwtToken;
         const newRefreshToken = response.data.refreshToken;
-        
+
         localStorage.setItem('token', newJwtToken);
         if (newRefreshToken) {
           localStorage.setItem('refreshToken', newRefreshToken);
         }
-        
+
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${newJwtToken}`;
         originalRequest.headers.Authorization = `Bearer ${newJwtToken}`;
-        
+
         processQueue(null, newJwtToken);
         return axios(originalRequest);
       } catch (refreshError) {

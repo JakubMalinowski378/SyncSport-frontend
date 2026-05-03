@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Row, Col, Card, Spinner, Alert, Badge } from 'react-bootstrap';
 import {
@@ -18,64 +18,21 @@ import {
   BsChevronRight,
   BsImages,
 } from 'react-icons/bs';
-import apiClient from '../services/apiClient';
+import { useFacilities } from '../hooks/useFacilityQueries';
 import '../styles/home-page.css';
-import type { ImageDto } from '../types/ImageDto';
-
-interface Facility {
-  id: string;
-  slug: string | null;
-  name: string | null;
-  address: string | null;
-  reservationDuration?: number | null;
-  openingHours?: OpeningHour[] | null;
-  images?: (string | ImageDto)[] | null;
-}
-
-interface OpeningHour {
-  dayName: string;
-  openTime: string;
-  closeTime: string;
-  isClosed: boolean;
-}
-
-interface GetFacilitiesResponsePagedResult {
-  items: Facility[] | null;
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-}
 
 export default function HomePage() {
-  const [totalCount, setTotalCount] = useState(0);
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [activeImageIndexes, setActiveImageIndexes] = useState<Record<string, number>>({});
+  const [page] = useState(1);
 
-  const fetchFacilities = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await apiClient.get<GetFacilitiesResponsePagedResult>('/api/facilities', {
-        params: {
-          PageNumber: 1,
-          PageSize: 15,
-        },
-      });
-      setFacilities(res.data.items || []);
-      setTotalCount(res.data.totalCount || 0);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Nie udało się załadować obiektów');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data: facilitiesData, isLoading: loading, error: fetchError } = useFacilities({
+    PageNumber: page,
+    PageSize: 15,
+  });
 
-  useEffect(() => {
-    fetchFacilities();
-  }, []);
+  const facilities = facilitiesData?.items || [];
+  const totalCount = facilitiesData?.totalCount || 0;
+  const error = fetchError instanceof Error ? fetchError.message : fetchError ? 'Nie udało się załadować obiektów' : null;
 
   const formatTime = (timeStr?: string) => {
     if (!timeStr || timeStr === '00:00:00') {
@@ -110,7 +67,7 @@ export default function HomePage() {
     }
   };
 
-  const getFacilityImageUrls = (images?: (string | ImageDto)[] | null) => {
+  const getFacilityImageUrls = (images?: unknown[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
@@ -121,7 +78,12 @@ export default function HomePage() {
           return img.trim();
         }
 
-        return img?.url?.trim() || '';
+        if (img && typeof img === 'object') {
+          const record = img as Record<string, unknown>;
+          const url = record.url ?? record.imageUrl ?? record.src ?? record.path;
+          return typeof url === 'string' ? url.trim() : '';
+        }
+        return '';
       })
       .filter(Boolean);
   };

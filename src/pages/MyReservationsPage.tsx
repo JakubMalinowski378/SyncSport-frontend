@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Card, Spinner, Alert, Table, Badge, Form, Row, Col, InputGroup } from 'react-bootstrap';
 import {
@@ -15,31 +15,9 @@ import {
   BsCreditCard,
 } from 'react-icons/bs';
 import dayjs from 'dayjs';
-import apiClient from '../services/apiClient';
-
-
-interface UserReservationResponse {
-  id: string;
-  courtId: string;
-  courtName?: string | null;
-  facilityName?: string | null;
-  startTime: string;
-  endTime: string;
-  price?: number | null;
-  status: ReservationStatus;
-}
-
-type ReservationStatus = 0 | 1 | 2 | 3;
-
-interface UserReservationResponsePagedResult {
-  items: UserReservationResponse[] | null;
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-/* ---- helpers ---- */
+import { useMyReservations } from '../hooks/useReservationQueries';
+import { useCreateCheckoutSession } from '../hooks/usePaymentQueries';
+import type { ReservationStatus } from '../services/reservationService';
 
 type SortField = 'date' | 'status' | 'price';
 type SortDir = 'asc' | 'desc';
@@ -67,15 +45,8 @@ const STATUS_ICON: Record<ReservationStatus, React.ReactNode> = {
 
 const ALL_STATUSES: ReservationStatus[] = [0, 1, 2, 3];
 
-/* ---- page ---- */
-
 export default function MyReservationsPage() {
-  const [reservations, setReservations] = useState<UserReservationResponse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
 
   const [filterStatus, setFilterStatus] = useState<ReservationStatus | null>(null);
   const [searchText, setSearchText] = useState('');
@@ -83,56 +54,41 @@ export default function MyReservationsPage() {
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [, setPayError] = useState<string | null>(null);
 
-  const fetchReservations = async (pageNumber: number) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const params: Record<string, string | number> = {
-        PageNumber: pageNumber,
-        PageSize: 10,
-        SortColumn: sortField,
-        SortOrder: sortDir,
-      };
-
-      if (searchText.trim()) {
-        params.SearchTerm = searchText.trim();
-      }
-
-      const res = await apiClient.get<UserReservationResponsePagedResult>(
-        '/api/reservations/me',
-        { params }
-      );
-
-      setReservations(res.data.items || []);
-      setTotalPages(res.data.totalPages || 1);
-      setTotalCount(res.data.totalCount || 0);
-    } catch (err: any) {
-      setError(
-        err.response?.data?.detail ||
-          'Nie udało się pobrać listy rezerwacji.'
-      );
-    } finally {
-      setLoading(false);
-    }
+  const queryParams: Record<string, string | number> = {
+    PageNumber: page,
+    PageSize: 10,
+    SortColumn: sortField,
+    SortOrder: sortDir,
   };
 
-  useEffect(() => {
-    fetchReservations(page);
-  }, [page, sortField, sortDir, searchText]);
+  if (searchText.trim()) {
+    queryParams.SearchTerm = searchText.trim();
+  }
+
+  const { data, isLoading: loading, error: fetchError } = useMyReservations(queryParams);
+  const createCheckoutSessionMutation = useCreateCheckoutSession();
+
+  const reservations = data?.items || [];
+  const totalPages = data?.totalPages || 1;
+  const totalCount = data?.totalCount || 0;
+
+  const error = fetchError
+    ? (fetchError instanceof Error ? fetchError.message : 'Nie udało się pobrać listy rezerwacji.')
+    : null;
 
   const payReservation = async (reservationId: string) => {
     setPayingId(reservationId);
     try {
-      const stripeResponse = await apiClient.post('/api/payments/create-checkout-session', {
+      const stripeResponse = await createCheckoutSessionMutation.mutateAsync({
         reservationId,
         successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
         cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
       });
-      window.location.href = stripeResponse.data.url;
+      window.location.href = stripeResponse.url;
     } catch (err: any) {
-      setError(
+      setPayError(
         err.response?.data?.detail || 'Nie udało się rozpocząć płatności.'
       );
     } finally {
@@ -180,11 +136,9 @@ export default function MyReservationsPage() {
         )}
       </div>
 
-      {/* ---- Filters bar ---- */}
       <Card className="bg-card border-secondary rounded-4 shadow-sm mb-4">
         <Card.Body className="p-3">
           <Row className="g-2 align-items-end">
-            {/* Search */}
             <Col xs={12} md={4}>
               <Form.Label className="small text-secondary mb-1">
                 <BsSearch className="me-1" />
@@ -199,7 +153,6 @@ export default function MyReservationsPage() {
               </InputGroup>
             </Col>
 
-            {/* Status filter */}
             <Col xs={6} md={3}>
               <Form.Label className="small text-secondary mb-1">
                 <BsFunnel className="me-1" />
@@ -222,7 +175,6 @@ export default function MyReservationsPage() {
               </Form.Select>
             </Col>
 
-            {/* Sorting */}
             <Col xs={12} md={4}>
               <Form.Label className="small text-secondary mb-1">Sortuj po</Form.Label>
               <div className="d-flex gap-1">
@@ -239,7 +191,6 @@ export default function MyReservationsPage() {
               </div>
             </Col>
 
-            {/* Clear */}
             <Col xs={6} md={2} className="d-flex align-items-end">
               {hasActiveFilters && (
                 <button className="btn btn-sm btn-outline-danger w-100" onClick={clearFilters}>
@@ -250,8 +201,6 @@ export default function MyReservationsPage() {
           </Row>
         </Card.Body>
       </Card>
-
-      {/* ---- Content ---- */}
 
       {loading && (
         <div className="text-center py-5">
@@ -279,14 +228,12 @@ export default function MyReservationsPage() {
 
       {!loading && reservations.length > 0 && (
         <>
-          {/* Info about filtered results */}
           {hasActiveFilters && (
             <p className="text-secondary small mb-2">
               Wyświetlono {filtered.length} z {reservations.length} rezerwacji (filtry aktywne)
             </p>
           )}
 
-          {/* Desktop table */}
           <Card className="bg-card border-secondary rounded-4 shadow-sm d-none d-md-block">
             <Card.Body className="p-0">
               <Table hover className="mb-0">
@@ -353,7 +300,6 @@ export default function MyReservationsPage() {
             </Card.Body>
           </Card>
 
-          {/* Mobile cards */}
           <div className="d-md-none d-flex flex-column gap-3">
             {filtered.length === 0 && (
               <p className="text-center text-secondary py-3">
@@ -409,7 +355,6 @@ export default function MyReservationsPage() {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="d-flex justify-content-center align-items-center gap-3 mt-4">
               <button

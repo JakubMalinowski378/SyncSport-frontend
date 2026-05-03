@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Alert, Spinner } from 'react-bootstrap';
-import apiClient from '../../../services/apiClient';
+import { useDeleteCourt } from '../../../hooks/useFacilityQueries';
 
 interface Court {
   id: string;
@@ -18,23 +18,20 @@ interface DeleteCourtModalProps {
 }
 
 export default function DeleteCourtModal({ show, onHide, onSuccess, facilitySlug, court }: DeleteCourtModalProps) {
-  const [loading, setLoading] = useState(false);
+  const deleteCourtMutation = useDeleteCourt();
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!court || !facilitySlug) return;
-    
-    setLoading(true);
+
     setError(null);
-    
+
     try {
-      await apiClient.delete(`/api/facilities/${facilitySlug}/courts/${court.id}`);
+      await deleteCourtMutation.mutateAsync({ facilitySlug, courtId: court.id });
       onSuccess();
       onHide();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Nie udało się usunąć kortu');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -49,7 +46,7 @@ export default function DeleteCourtModal({ show, onHide, onSuccess, facilitySlug
       </Modal.Header>
       <Modal.Body className="bg-card text-body">
         {error && <Alert variant="danger">{error}</Alert>}
-        
+
         <p>
           Are you sure you want to delete the court <strong>{court?.name}</strong>?
         </p>
@@ -58,11 +55,11 @@ export default function DeleteCourtModal({ show, onHide, onSuccess, facilitySlug
         </p>
       </Modal.Body>
       <Modal.Footer className="bg-card border-secondary">
-        <Button variant="secondary" onClick={onHide} disabled={loading}>
+        <Button variant="secondary" onClick={onHide} disabled={deleteCourtMutation.isPending}>
           Cancel
         </Button>
-        <Button variant="danger" onClick={handleDelete} disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Usuń kort'}
+        <Button variant="danger" onClick={handleDelete} disabled={deleteCourtMutation.isPending}>
+          {deleteCourtMutation.isPending ? <Spinner size="sm" /> : 'Usuń kort'}
         </Button>
       </Modal.Footer>
     </Modal>

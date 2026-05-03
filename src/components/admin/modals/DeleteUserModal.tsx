@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
-import apiClient from '../../../services/apiClient';
+import { useDeleteUser } from '../../../hooks/useUserQueries';
 import type { User } from '../UserManagement';
 
 interface DeleteUserModalProps {
@@ -11,21 +11,18 @@ interface DeleteUserModalProps {
 }
 
 export default function DeleteUserModal({ show, onHide, onSuccess, user }: DeleteUserModalProps) {
-  const [loading, setLoading] = useState(false);
+  const deleteUserMutation = useDeleteUser();
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!user) return;
-    setLoading(true);
     setError(null);
     try {
-      await apiClient.delete(`/api/users/${user.id}`);
+      await deleteUserMutation.mutateAsync(user.id);
       onSuccess();
       onHide();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Nie udało się usunąć użytkownika');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -39,9 +36,9 @@ export default function DeleteUserModal({ show, onHide, onSuccess, user }: Delet
         Are you sure you want to delete user <strong>{user?.email}</strong>? This action cannot be undone.
       </Modal.Body>
       <Modal.Footer className="bg-card border-secondary">
-        <Button variant="secondary" onClick={onHide} disabled={loading}>Cancel</Button>
-        <Button variant="danger" onClick={handleDelete} disabled={loading}>
-          {loading ? <Spinner size="sm" animation="border" /> : 'Delete User'}
+        <Button variant="secondary" onClick={onHide} disabled={deleteUserMutation.isPending}>Cancel</Button>
+        <Button variant="danger" onClick={handleDelete} disabled={deleteUserMutation.isPending}>
+          {deleteUserMutation.isPending ? <Spinner size="sm" animation="border" /> : 'Delete User'}
         </Button>
       </Modal.Footer>
     </Modal>

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 'react-bootstrap';
-import { BsArrowUp, BsArrowDown, BsPencilSquare } from 'react-icons/bs';
-import apiClient from '../../services/apiClient';
+import { BsArrowUp, BsArrowDown, BsPencilSquare, BsTrash } from 'react-icons/bs';
+import { useQueryClient } from '@tanstack/react-query';
+import { useFacilities } from '../../hooks/useFacilityQueries';
 import CreateFacilityModal from './modals/CreateFacilityModal';
 import CreateTariffModal from './modals/CreateTariffModal';
 import EditFacilityModal from './modals/EditFacilityModal';
 import DeleteFacilityModal from './modals/DeleteFacilityModal';
 import FacilityCourts from './FacilityCourts';
-import { BsTrash } from 'react-icons/bs';
 
 export interface Facility {
   id: string;
@@ -16,69 +16,36 @@ export interface Facility {
   address: string | null;
 }
 
-interface GetFacilitiesResponsePagedResult {
-  items: Facility[] | null;
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export default function FacilityManagement() {
-  const [facilities, setFacilities] = useState<Facility[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const queryClient = useQueryClient();
   const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const pageSize = 15;
-
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState('Name');
   const [sortOrder, setSortOrder] = useState('asc');
+  const [expandedFacilityId, setExpandedFacilityId] = useState<string | null>(null);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCreateTariffModal, setShowCreateTariffModal] = useState(false);
   const [createdFacilityId, setCreatedFacilityId] = useState('');
-
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
 
-  const [expandedFacilityId, setExpandedFacilityId] = useState<string | null>(null);
-
-  const fetchFacilities = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get<GetFacilitiesResponsePagedResult>('/api/facilities', {
-        params: { 
-          PageNumber: pageNumber, 
-          PageSize: pageSize,
-          SearchTerm: searchTerm || undefined,
-          SortColumn: sortColumn,
-          SortOrder: sortOrder
-        }
-      });
-      setFacilities(res.data.items || []);
-      setTotalPages(res.data.totalPages || 1);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Nie udało się załadować obiekty');
-    } finally {
-      setLoading(false);
-    }
+  const params: Record<string, string | number | undefined> = {
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+    SearchTerm: searchTerm || undefined,
+    SortColumn: sortColumn,
+    SortOrder: sortOrder,
   };
-
-  useEffect(() => {
-    fetchFacilities();
-  }, [pageNumber, sortColumn, sortOrder]);
+  const { data, isLoading, error } = useFacilities(params);
+  const facilities = data?.items || [];
+  const totalPages = data?.totalPages || 1;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pageNumber === 1) {
-      fetchFacilities();
-    } else {
-      setPageNumber(1);
-    }
+    setPageNumber(1);
   };
 
   const handleSortChange = (col: string) => {
@@ -104,12 +71,12 @@ export default function FacilityManagement() {
           <Button variant="success" size="sm" className="me-2" onClick={() => setShowCreateModal(true)}>
             Dodaj obiekt
           </Button>
-          <Button variant="outline-primary" size="sm" onClick={fetchFacilities} disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Odśwież'}
+          <Button variant="outline-primary" size="sm" onClick={() => {}} disabled={isLoading}>
+            {isLoading ? <Spinner size="sm" /> : 'Odśwież'}
           </Button>
         </div>
       </Card.Header>
-      
+
       <Card.Body>
         <Form onSubmit={handleSearchSubmit} className="mb-3">
           <Row className="g-2">
@@ -123,12 +90,12 @@ export default function FacilityManagement() {
               />
             </Col>
             <Col xs="auto">
-              <Button type="submit" variant="primary" disabled={loading}>Szukaj</Button>
+              <Button type="submit" variant="primary" disabled={isLoading}>Szukaj</Button>
             </Col>
           </Row>
         </Form>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error instanceof Error ? error.message : 'Nie udało się załadować obiekty'}</Alert>}
 
         <Table responsive hover className="align-middle mb-0 text-body">
           <thead className="table-light">
@@ -144,7 +111,7 @@ export default function FacilityManagement() {
             </tr>
           </thead>
           <tbody>
-            {loading && facilities.length === 0 ? (
+            {isLoading && facilities.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-4"><Spinner /></td></tr>
             ) : facilities.length === 0 ? (
               <tr><td colSpan={4} className="text-center py-4 text-secondary">Nie znaleziono obiektów.</td></tr>
@@ -156,9 +123,9 @@ export default function FacilityManagement() {
                     <td>{f.name}</td>
                     <td>{f.address}</td>
                     <td className="text-end" onClick={e => e.stopPropagation()}>
-                      <Button 
-                        variant="outline-primary" 
-                        size="sm" 
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
                         title="Edytuj"
                         className="me-2"
                         onClick={() => {
@@ -168,9 +135,9 @@ export default function FacilityManagement() {
                       >
                         <BsPencilSquare />
                       </Button>
-                      <Button 
-                        variant="outline-danger" 
-                        size="sm" 
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
                         title="Usuń"
                         onClick={() => {
                           setSelectedFacility(f);
@@ -197,9 +164,9 @@ export default function FacilityManagement() {
         {totalPages > 1 && (
           <div className="d-flex justify-content-center mt-3">
             <Pagination className="mb-0">
-              <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || loading} />
+              <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || isLoading} />
               <Pagination.Item disabled>{pageNumber} z {totalPages}</Pagination.Item>
-              <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || loading} />
+              <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || isLoading} />
             </Pagination>
           </div>
         )}
@@ -211,7 +178,7 @@ export default function FacilityManagement() {
         onSuccess={facilityId => {
           setCreatedFacilityId(facilityId);
           setShowCreateTariffModal(true);
-          fetchFacilities();
+          queryClient.invalidateQueries({ queryKey: ['facilities'] });
         }}
       />
 
@@ -221,7 +188,7 @@ export default function FacilityManagement() {
           setShowCreateTariffModal(false);
           setCreatedFacilityId('');
         }}
-        onSuccess={fetchFacilities}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['facilities'] })}
         facilityId={createdFacilityId}
       />
 
@@ -231,7 +198,7 @@ export default function FacilityManagement() {
           setShowEditModal(false);
           setSelectedFacility(null);
         }}
-        onSuccess={fetchFacilities}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['facilities'] })}
         facility={selectedFacility}
       />
 
@@ -241,7 +208,7 @@ export default function FacilityManagement() {
           setShowDeleteModal(false);
           setSelectedFacility(null);
         }}
-        onSuccess={fetchFacilities}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['facilities'] })}
         facility={selectedFacility}
       />
     </Card>

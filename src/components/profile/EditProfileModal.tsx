@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Button, Spinner, Alert } from 'react-bootstrap';
-import apiClient from '../../services/apiClient';
+import { useUpdateProfile } from '../../hooks/useUserQueries';
 
 interface EditProfileModalProps {
   show: boolean;
@@ -19,8 +19,9 @@ export default function EditProfileModal({
 }: EditProfileModalProps) {
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName] = useState('');
-  const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+
+  const updateProfileMutation = useUpdateProfile();
 
   useEffect(() => {
     if (show) {
@@ -32,18 +33,15 @@ export default function EditProfileModal({
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
     setEditError(null);
     try {
-      await apiClient.put('/api/users/me', {
+      await updateProfileMutation.mutateAsync({
         firstName: editFirstName,
         lastName: editLastName,
       });
       onSuccess();
     } catch (err: any) {
       setEditError(err.response?.data?.detail || 'Nie udało się zaktualizować profilu.');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -78,11 +76,11 @@ export default function EditProfileModal({
         </Form>
       </Modal.Body>
       <Modal.Footer className="bg-card border-secondary">
-        <Button variant="secondary" onClick={onHide} disabled={saving}>
+        <Button variant="secondary" onClick={onHide} disabled={updateProfileMutation.isPending}>
           Cancel
         </Button>
-        <Button variant="primary" type="submit" form="editProfileForm" disabled={saving}>
-          {saving ? <Spinner size="sm" animation="border" /> : 'Save Changes'}
+        <Button variant="primary" type="submit" form="editProfileForm" disabled={updateProfileMutation.isPending}>
+          {updateProfileMutation.isPending ? <Spinner size="sm" animation="border" /> : 'Save Changes'}
         </Button>
       </Modal.Footer>
     </Modal>

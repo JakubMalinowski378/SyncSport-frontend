@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Table, Button, Spinner, Alert, Card, Form, Row, Col, Pagination } from 'react-bootstrap';
 import { BsArrowUp, BsArrowDown, BsListCheck } from 'react-icons/bs';
-import apiClient from '../../services/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUsers, userKeys } from '../../hooks/useUserQueries';
 import DeleteUserModal from './modals/DeleteUserModal';
 import ChangeRoleModal from './modals/ChangeRoleModal';
 import ToggleUserStatusModal from './modals/ToggleUserStatusModal';
@@ -17,24 +18,13 @@ export interface User {
   managedFacilityIds: string[] | null;
 }
 
-interface GetUserResponsePagedResult {
-  items: User[] | null;
-  totalCount: number;
-  pageNumber: number;
-  pageSize: number;
-  totalPages: number;
-}
-
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  const queryClient = useQueryClient();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
 
   const [showRoleModal, setShowRoleModal] = useState(false);
-  const [userToChangeRole, setUserToChangeRole] = useState<User | null>(null);
+  const [userToChangeRole, _setUserToChangeRole] = useState<User | null>(null);
 
   const [showDisableModal, setShowDisableModal] = useState(false);
   const [userToDisable, setUserToDisable] = useState<User | null>(null);
@@ -46,41 +36,22 @@ export default function UserManagement() {
   const [sortColumn, setSortColumn] = useState('Email');
   const [sortOrder, setSortOrder] = useState('asc');
   const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const pageSize = 15;
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get<GetUserResponsePagedResult>('/api/users', {
-        params: { 
-          PageNumber: pageNumber, 
-          PageSize: pageSize,
-          SearchTerm: searchTerm || undefined,
-          SortColumn: sortColumn,
-          SortOrder: sortOrder
-        }
-      });
-      setUsers(res.data.items || []);
-      setTotalPages(res.data.totalPages || 1);
-    } catch (err: any) {
-      setError(err.response?.data?.detail || 'Nie udało się załadować użytkowników');
-    } finally {
-      setLoading(false);
-    }
+  const params: Record<string, string | number | undefined> = {
+    PageNumber: pageNumber,
+    PageSize: pageSize,
+    SearchTerm: searchTerm || undefined,
+    SortColumn: sortColumn,
+    SortOrder: sortOrder,
   };
-
-  useEffect(() => {
-    fetchUsers();
-  }, [pageNumber, sortColumn, sortOrder]);
+  const { data, isLoading, error } = useUsers(params);
+  const users = data?.items || [];
+  const totalPages = data?.totalPages || 1;
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pageNumber === 1) {
-      fetchUsers();
-    } else {
-      setPageNumber(1);
-    }
+    setPageNumber(1);
   };
 
   const handleSortChange = (col: string) => {
@@ -93,8 +64,10 @@ export default function UserManagement() {
     setPageNumber(1);
   };
 
+  const refreshUsers = () => queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+
   const openRoleModal = (user: User) => {
-    setUserToChangeRole(user);
+    _setUserToChangeRole(user);
     setShowRoleModal(true);
   };
 
@@ -107,11 +80,11 @@ export default function UserManagement() {
     <Card className="bg-card w-100 border-secondary">
       <Card.Header className="d-flex justify-content-between align-items-center bg-card border-secondary">
         <h5 className="mb-0 fw-bold">Zarządzanie użytkownikami</h5>
-        <Button variant="outline-primary" size="sm" onClick={fetchUsers} disabled={loading}>
-          {loading ? <Spinner size="sm" /> : 'Odśwież'}
+        <Button variant="outline-primary" size="sm" onClick={refreshUsers} disabled={isLoading}>
+            {isLoading ? <Spinner size="sm" /> : 'Odśwież'}
         </Button>
       </Card.Header>
-      
+
       <Card.Body>
         <Form onSubmit={handleSearchSubmit} className="mb-3">
           <Row className="g-2">
@@ -125,12 +98,12 @@ export default function UserManagement() {
               />
             </Col>
             <Col xs="auto">
-              <Button type="submit" variant="primary" disabled={loading}>Szukaj</Button>
+              <Button type="submit" variant="primary" disabled={isLoading}>Szukaj</Button>
             </Col>
           </Row>
         </Form>
 
-        {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error instanceof Error ? error.message : 'Nie udało się załadować użytkowników'}</Alert>}
 
         <Table responsive hover className="align-middle mb-0 text-body">
           <thead className="table-light">
@@ -148,7 +121,7 @@ export default function UserManagement() {
             </tr>
           </thead>
           <tbody>
-            {loading && users.length === 0 ? (
+            {isLoading && users.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-4"><Spinner /></td></tr>
             ) : users.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-4 text-secondary">Nie znaleziono użytkowników.</td></tr>
@@ -159,7 +132,7 @@ export default function UserManagement() {
                   <td>{u.firstName} {u.lastName}</td>
                   <td>{u.email}</td>
                   <td>
-                    <span className={`badge ${u.role?.toLowerCase() === 'admin' ? 'bg-danger' : 
+                    <span className={`badge ${u.role?.toLowerCase() === 'admin' ? 'bg-danger' :
                                           u.role?.toLowerCase() === 'manager' ? 'bg-warning' : 'bg-primary'}`}>
                       {u.role || 'User'}
                     </span>
@@ -184,9 +157,9 @@ export default function UserManagement() {
                     <Button variant="outline-info" size="sm" className="me-2" onClick={() => openRoleModal(u)}>
                       Rola
                     </Button>
-                    <Button 
-                      variant={u.isActive ? "outline-warning" : "outline-success"} 
-                      size="sm" 
+                    <Button
+                      variant={u.isActive ? "outline-warning" : "outline-success"}
+                      size="sm"
                       className="me-2"
                       onClick={() => { setUserToDisable(u); setShowDisableModal(true); }}
                     >
@@ -205,9 +178,9 @@ export default function UserManagement() {
         {totalPages > 1 && (
           <div className="d-flex justify-content-center mt-3">
             <Pagination className="mb-0">
-              <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || loading} />
+              <Pagination.Prev onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber === 1 || isLoading} />
               <Pagination.Item disabled>{pageNumber} z {totalPages}</Pagination.Item>
-              <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || loading} />
+              <Pagination.Next onClick={() => setPageNumber(p => Math.min(totalPages, p + 1))} disabled={pageNumber === totalPages || isLoading} />
             </Pagination>
           </div>
         )}
@@ -216,21 +189,21 @@ export default function UserManagement() {
       <DeleteUserModal
         show={showDeleteModal}
         onHide={() => setShowDeleteModal(false)}
-        onSuccess={fetchUsers}
+        onSuccess={refreshUsers}
         user={userToDelete}
       />
 
       <ChangeRoleModal
         show={showRoleModal}
         onHide={() => setShowRoleModal(false)}
-        onSuccess={fetchUsers}
+        onSuccess={refreshUsers}
         user={userToChangeRole}
       />
 
       <ToggleUserStatusModal
         show={showDisableModal}
         onHide={() => setShowDisableModal(false)}
-        onSuccess={fetchUsers}
+        onSuccess={refreshUsers}
         user={userToDisable}
       />
 

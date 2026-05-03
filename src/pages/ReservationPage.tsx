@@ -1,68 +1,61 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Container, Card, Alert, Button, Spinner, Badge, Table } from 'react-bootstrap';
 import { BsChevronLeft, BsChevronRight, BsImages } from 'react-icons/bs';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import 'dayjs/locale/pl';
-import apiClient from '../services/apiClient';
+import { useFacility, useCourt, useWeekReservations } from '../hooks/useFacilityQueries';
+import type { Slot } from '../services/facilityService';
 import ReservationModal from '../components/modals/ReservationModal';
-import type { ImageDto } from '../types/ImageDto';
 
 dayjs.extend(utc);
 dayjs.extend(isoWeek);
+dayjs.extend(customParseFormat);
 dayjs.locale('pl');
 
-interface Court {
-  id: string;
-  name: string | null;
-  slug: string | null;
-  surfaceType: string | null;
-  isActive: boolean;
-  images?: ImageDto[] | null;
-}
-
-interface Slot {
-  startTime: string;
-  endTime: string;
-  status: null | 'Pending' | 'Paid';
-}
-
-interface DaySlots {
-  date: string;
-  dayOfWeek: number;
-  slots: Slot[];
-}
-
-interface WeekReservations {
-  weekStartDate: string;
-  weekEndDate: string;
-  days: DaySlots[];
+function parseSlotTime(value: string): dayjs.Dayjs {
+  if (!value) return dayjs(value);
+  const clean = value.replace(/[Zz]$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
+  return dayjs(clean);
 }
 
 export default function ReservationPage() {
   const { facilitySlug, courtSlug } = useParams<{ facilitySlug: string; courtSlug: string }>();
 
-  const [court, setCourt] = useState<Court | null>(null);
-  const [facilityId, setFacilityId] = useState<string | null>(null);
   const [weekStart, setWeekStart] = useState<dayjs.Dayjs>(dayjs().startOf('isoWeek'));
-  const [weekReservations, setWeekReservations] = useState<WeekReservations | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{startTime: string; endTime: string} | null>(null);
 
-  const getCourtImageUrls = (images?: ImageDto[] | null) => {
+  const { data: facility, error: facilityError } = useFacility(facilitySlug || '');
+  const { data: court, isLoading: loadingCourt, error: courtError } = useCourt(facilitySlug || '', courtSlug || '');
+  const weekDate = weekStart.format('YYYY-MM-DD');
+  const { data: weekReservations, isLoading: loadingWeek, error: weekError } = useWeekReservations(court?.id || '', court?.id ? weekDate : '');
+
+  const loading = loadingCourt || loadingWeek;
+  const error = facilityError || courtError || weekError;
+
+  const facilityId = facility?.id || null;
+
+  const getCourtImageUrls = (images?: unknown[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
 
     return images
-      .map((img) => img?.url?.trim() || '')
+      .map((img) => {
+        if (typeof img === 'string') return img.trim();
+        if (img && typeof img === 'object') {
+          const record = img as Record<string, unknown>;
+          const candidate = record.url ?? record.imageUrl ?? record.src ?? record.path;
+          return typeof candidate === 'string' ? candidate.trim() : '';
+        }
+        return '';
+      })
       .filter(Boolean);
   };
 
@@ -78,44 +71,6 @@ export default function ReservationPage() {
         : (current - 1 + imageUrls.length) % imageUrls.length
     ));
   };
-
-  useEffect(() => {
-    const fetchCourtAndReservations = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const facilityRes = await apiClient.get<any>(`/api/facilities/${facilitySlug}`);
-        setFacilityId(facilityRes.data.id);
-
-        const courtRes = await apiClient.get<Court>(
-          `/api/facilities/${facilitySlug}/courts/${courtSlug}`
-        );
-        setCourt(courtRes.data);
-        setActiveImageIndex(0);
-
-        if (courtRes.data.id) {
-          const weekDate = weekStart.format('YYYY-MM-DD');
-          const weekData = await apiClient.get<WeekReservations>(
-            `/api/reservations/courts/${courtRes.data.id}`,
-            {
-              params: {
-                weekDate,
-              }
-            }
-          );
-          setWeekReservations(weekData.data);
-        }
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Nie udało się załadować danych rezerwacji');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (facilitySlug && courtSlug) {
-      fetchCourtAndReservations();
-    }
-  }, [facilitySlug, courtSlug, weekStart]);
 
   const canGoToPrevWeek = weekStart.isAfter(dayjs().startOf('isoWeek'));
 
@@ -164,7 +119,7 @@ export default function ReservationPage() {
           <p className="mt-2">Ładowanie szczegółów kortu...</p>
         </div>
       ) : error ? (
-        <Alert variant="danger" className="mb-4">{error}</Alert>
+        <Alert variant="danger" className="mb-4">{error instanceof Error ? error.message : String(error)}</Alert>
       ) : (
         <>
           <div className="mb-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
@@ -263,9 +218,11 @@ export default function ReservationPage() {
                         const allTimes = new Set<string>();
                         weekReservations!.days.forEach((day) => {
                           day.slots.forEach((slot) => {
-                            if (slot.startTime && dayjs.utc(slot.startTime).isValid()) {
-                              const t = dayjs.utc(slot.startTime).local().format('HH:mm');
-                              allTimes.add(t);
+                            if (slot.startTime) {
+                              const parsed = parseSlotTime(slot.startTime);
+                              if (parsed.isValid()) {
+                                allTimes.add(parsed.format('HH:mm'));
+                              }
                             }
                           });
                         });
@@ -275,9 +232,11 @@ export default function ReservationPage() {
                         return sortedTimes.map((time) => (
                           <tr key={time}>
                             {weekReservations!.days.map((day) => {
-                              const slot = day.slots.find(
-                                (s) => s.startTime && dayjs.utc(s.startTime).isValid() && dayjs.utc(s.startTime).local().format('HH:mm') === time
-                              );
+                              const slot = day.slots.find((s) => {
+                                if (!s.startTime) return false;
+                                const parsed = parseSlotTime(s.startTime);
+                                return parsed.isValid() && parsed.format('HH:mm') === time;
+                              });
 
                               if (!slot) {
                                 return <td key={`${day.date}-${time}`} className="py-2 px-1"></td>;

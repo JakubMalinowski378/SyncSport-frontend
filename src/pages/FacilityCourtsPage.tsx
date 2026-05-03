@@ -1,43 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Card, Spinner, Alert, Badge } from 'react-bootstrap';
-import apiClient from '../services/apiClient';
+import { useFacility, useCourts } from '../hooks/useFacilityQueries';
 import { BsChevronLeft, BsChevronRight, BsImages } from 'react-icons/bs';
-import type { ImageDto } from '../types/ImageDto';
-
-interface Court {
-  id: string;
-  slug?: string | null;
-  name: string | null;
-  surfaceType: string | null;
-  isActive: boolean;
-  images?: unknown[] | null;
-}
-
-interface CourtDtoPagedResult {
-  items: Court[] | null;
-}
-
-interface Facility {
-  id: string;
-  slug?: string | null;
-  name: string | null;
-  address: string | null;
-  images?: (string | ImageDto)[] | null;
-}
 
 export default function FacilityCourtsPage() {
   const { slug } = useParams<{ slug: string }>();
 
-  const [courts, setCourts] = useState<Court[]>([]);
-  const [facility, setFacility] = useState<Facility | null>(null);
+  const { data: facility, isLoading: loadingFacility } = useFacility(slug || '');
+  const { data: courtsData, isLoading: loadingCourts, error: courtsError } = useCourts(slug || '', {
+    PageNumber: 1,
+    PageSize: 30,
+  });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const courts = courtsData?.items || [];
+  const loading = loadingFacility || loadingCourts;
+  const error = courtsError ? (courtsError instanceof Error ? courtsError.message : 'Nie udało się załadować szczegółów') : null;
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeCourtImageIndexes, setActiveCourtImageIndexes] = useState<Record<string, number>>({});
 
-  const getFacilityImageUrls = (images?: (string | ImageDto)[] | null) => {
+  const getFacilityImageUrls = (images?: unknown[] | null) => {
     if (!images || images.length === 0) {
       return [] as string[];
     }
@@ -47,8 +29,12 @@ export default function FacilityCourtsPage() {
         if (typeof img === 'string') {
           return img.trim();
         }
-
-        return img?.url?.trim() || '';
+        if (img && typeof img === 'object') {
+          const record = img as Record<string, unknown>;
+          const url = record.url ?? record.imageUrl ?? record.src ?? record.path;
+          return typeof url === 'string' ? url.trim() : '';
+        }
+        return '';
       })
       .filter(Boolean);
   };
@@ -105,29 +91,6 @@ export default function FacilityCourtsPage() {
       };
     });
   };
-
-  useEffect(() => {
-    const fetchFacilityAndCourts = async () => {
-      setLoading(true);
-      try {
-        const facilityRes = await apiClient.get<Facility>(`/api/facilities/${slug}`);
-        setFacility(facilityRes.data);
-        setActiveImageIndex(0);
-
-        const courtsRes = await apiClient.get<CourtDtoPagedResult>(`/api/facilities/${slug}/courts`, {
-          params: { PageNumber: 1, PageSize: 30 }
-        });
-        setCourts(courtsRes.data.items || []);
-        setError(null);
-      } catch (err: any) {
-        setError(err.response?.data?.detail || 'Nie udało się załadować szczegółów');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) fetchFacilityAndCourts();
-  }, [slug]);
 
   const imageUrls = getFacilityImageUrls(facility?.images);
   const currentImageUrl = imageUrls[activeImageIndex] || imageUrls[0] || null;

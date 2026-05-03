@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
 import dayjs from 'dayjs';
-import apiClient from '../../services/apiClient';
+import { useCalculatePrice } from '../../hooks/useFacilityQueries';
+import { useCreateReservation } from '../../hooks/useReservationQueries';
+import { useCreateCheckoutSession } from '../../hooks/usePaymentQueries';
 
 interface ReservationModalProps {
   show: boolean;
@@ -15,10 +17,12 @@ interface ReservationModalProps {
 }
 
 export default function ReservationModal({ show, onHide, facilityId, courtId, slot }: ReservationModalProps) {
-  const [loadingPrice, setLoadingPrice] = useState(false);
-  const [loadingReserve, setLoadingReserve] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [price, setPrice] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const calculatePriceMutation = useCalculatePrice();
+  const createReservationMutation = useCreateReservation();
+  const createCheckoutSessionMutation = useCreateCheckoutSession();
 
   useEffect(() => {
     if (show && slot) {
@@ -31,51 +35,44 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
 
   const calculatePrice = async () => {
     if (!slot) return;
-    setLoadingPrice(true);
     setError(null);
     try {
-      const response = await apiClient.post('/api/tariffs/calculate', {
+      const result = await calculatePriceMutation.mutateAsync({
         facilityId,
         courtId,
         startTime: slot.startTime,
         endTime: slot.endTime,
       });
-      setPrice(response.data);
+      setPrice(result);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Wystąpił błąd podczas obliczania kwoty.');
-    } finally {
-      setLoadingPrice(false);
     }
   };
 
   const handleReserve = async () => {
     if (!slot) return;
-    setLoadingReserve(true);
     setError(null);
-    
+
     try {
-      // Create the reservation
-      const response = await apiClient.post('/api/reservations/me', {
+      const reservationId = await createReservationMutation.mutateAsync({
         courtId,
         startTime: slot.startTime,
         endTime: slot.endTime,
       });
-      
-      const reservationId = response.data;
 
-      const stripeResponse = await apiClient.post('/api/payments/create-checkout-session', {
+      const stripeResponse = await createCheckoutSessionMutation.mutateAsync({
         reservationId,
         successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
         cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
       });
 
-      window.location.href = stripeResponse.data.url;
+      window.location.href = stripeResponse.url;
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Wystąpił nieoczekiwany błąd podczas rezerwacji.');
-    } finally {
-      setLoadingReserve(false);
     }
   };
+
+  const isProcessing = calculatePriceMutation.isPending || createReservationMutation.isPending || createCheckoutSessionMutation.isPending;
 
   return (
     <Modal show={show} onHide={onHide} centered>
@@ -90,7 +87,7 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
           </div>
         )}
 
-        {loadingPrice ? (
+        {calculatePriceMutation.isPending ? (
           <div className="text-center py-3">
             <Spinner animation="border" size="sm" /> Obliczanie ceny...
           </div>
@@ -101,15 +98,15 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
         ) : null}
 
         {error && <Alert variant="danger">{error}</Alert>}
-        
+
         <p className="mt-3 mb-0">Czy chcesz przejść do płatności za ten termin?</p>
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={onHide} disabled={loadingReserve}>
+        <Button variant="secondary" onClick={onHide} disabled={isProcessing}>
           Anuluj
         </Button>
-        <Button variant="primary" onClick={handleReserve} disabled={loadingReserve || loadingPrice || price === null}>
-          {loadingReserve ? <Spinner as="span" animation="border" size="sm" /> : 'Przejdź do płatności'}
+        <Button variant="primary" onClick={handleReserve} disabled={isProcessing || calculatePriceMutation.isPending || price === null}>
+          {isProcessing ? <Spinner as="span" animation="border" size="sm" /> : 'Przejdź do płatności'}
         </Button>
       </Modal.Footer>
     </Modal>

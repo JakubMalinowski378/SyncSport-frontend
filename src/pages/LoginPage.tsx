@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import apiClient from '../services/apiClient';
+import { useSignIn } from '../hooks/useAuthQueries';
 import { useAuth } from '../hooks/useAuth';
 import PasswordInput from '../components/shared/PasswordInput';
 
@@ -8,43 +8,32 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const signInMutation = useSignIn();
 
   const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
     try {
-      const response = await apiClient.post('/api/accounts/sign-in', {
-        email,
-        password,
-      });
-
-      const { jwtToken, refreshToken } = response.data;
-      if (jwtToken) {
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken);
+      const data = await signInMutation.mutateAsync({ email, password });
+      if (data.jwtToken) {
+        if (data.refreshToken) {
+          localStorage.setItem('refreshToken', data.refreshToken);
         }
-        login(jwtToken);
+        login(data.jwtToken);
         navigate(from, { replace: true });
       } else {
         setError('Login failed: Invalid token received.');
       }
     } catch (err: any) {
-      if (err.response && err.response.data && err.response.data.title) {
-        setError(err.response.data.title);
-      } else {
-        setError('Podczas logowania wystąpił nieoczekiwany błąd. Spróbuj ponownie.');
-      }
-    } finally {
-      setIsLoading(false);
+      const msg = err.response?.data?.detail || err.response?.data?.title || err.response?.data?.message || 'Podczas logowania wystąpił nieoczekiwany błąd. Spróbuj ponownie.';
+      setError(msg);
     }
   };
 
@@ -55,7 +44,7 @@ export default function LoginPage() {
           <div className="card shadow-sm">
             <div className="card-body p-4">
               <h2 className="text-center mb-4">Zaloguj się do SyncSport</h2>
-              
+
               {error && (
                 <div className="alert alert-danger" role="alert">
                   {error}
@@ -65,9 +54,9 @@ export default function LoginPage() {
               <form onSubmit={handleSubmit}>
                 <div className="mb-3">
                   <label htmlFor="emailInput" className="form-label">Adres e-mail</label>
-                  <input 
-                    type="email" 
-                    className="form-control" 
+                  <input
+                    type="email"
+                    className="form-control"
                     id="emailInput"
                     placeholder="imie@przyklad.com"
                     value={email}
@@ -80,8 +69,8 @@ export default function LoginPage() {
                     <label htmlFor="passwordInput" className="form-label mb-0">Hasło</label>
                     <Link to="/zapomniane-haslo" className="text-decoration-none small">Zapomniałeś hasła?</Link>
                   </div>
-                  <PasswordInput 
-                    className="mt-2" 
+                  <PasswordInput
+                    className="mt-2"
                     id="passwordInput"
                     placeholder="Wprowadź swoje hasło"
                     value={password}
@@ -89,13 +78,13 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-                
-                <button 
-                  type="submit" 
+
+                <button
+                  type="submit"
                   className="btn btn-primary w-100 py-2 mb-3"
-                  disabled={isLoading}
+                  disabled={signInMutation.isPending}
                 >
-                  {isLoading ? 'Logowanie...' : 'Zaloguj się'}
+                  {signInMutation.isPending ? 'Logowanie...' : 'Zaloguj się'}
                 </button>
 
                 <div className="text-center">
