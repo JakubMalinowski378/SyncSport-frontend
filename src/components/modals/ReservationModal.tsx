@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Modal, Button, Spinner, Alert } from 'react-bootstrap';
+import { Modal, Button, Spinner, Alert, Form } from 'react-bootstrap';
 import dayjs from 'dayjs';
 import { useCalculatePrice } from '../../hooks/useFacilityQueries';
 import { useCreateReservation } from '../../hooks/useReservationQueries';
@@ -19,6 +19,7 @@ interface ReservationModalProps {
 export default function ReservationModal({ show, onHide, facilityId, courtId, slot }: ReservationModalProps) {
   const [price, setPrice] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [payOnSite, setPayOnSite] = useState(false);
 
   const calculatePriceMutation = useCalculatePrice();
   const createReservationMutation = useCreateReservation();
@@ -30,6 +31,7 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
     } else {
       setPrice(null);
       setError(null);
+      setPayOnSite(false);
     }
   }, [show, slot]);
 
@@ -58,15 +60,22 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
         courtId,
         startTime: slot.startTime,
         endTime: slot.endTime,
+        payOnSite,
       });
 
-      const stripeResponse = await createCheckoutSessionMutation.mutateAsync({
-        reservationId,
-        successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
-        cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
-      });
+      if (payOnSite) {
+        // Just reserve — admin will mark as paid on site later
+        onHide();
+      } else {
+        // Pay online via Stripe
+        const stripeResponse = await createCheckoutSessionMutation.mutateAsync({
+          reservationId,
+          successUrl: `${window.location.origin}/sukces?reservationId=${reservationId}`,
+          cancelUrl: `${window.location.origin}/anulowano?reservationId=${reservationId}`,
+        });
 
-      window.location.href = stripeResponse.url;
+        window.location.href = stripeResponse.url;
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Wystąpił nieoczekiwany błąd podczas rezerwacji.');
     }
@@ -99,14 +108,23 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
 
         {error && <Alert variant="danger">{error}</Alert>}
 
-        <p className="mt-3 mb-0">Czy chcesz przejść do płatności za ten termin?</p>
+        <div className="mt-3 mb-2">
+          <Form.Check
+            type="switch"
+            id="pay-on-site-switch"
+            label="Zapłacę na miejscu (przy odbiorze)"
+            checked={payOnSite}
+            onChange={(e) => setPayOnSite(e.target.checked)}
+            disabled={isProcessing}
+          />
+        </div>
       </Modal.Body>
       <Modal.Footer>
         <Button variant="secondary" onClick={onHide} disabled={isProcessing}>
           Anuluj
         </Button>
-        <Button variant="primary" onClick={handleReserve} disabled={isProcessing || calculatePriceMutation.isPending || price === null}>
-          {isProcessing ? <Spinner as="span" animation="border" size="sm" /> : 'Przejdź do płatności'}
+        <Button variant="primary" onClick={handleReserve} disabled={isProcessing || price === null}>
+          {isProcessing ? <Spinner as="span" animation="border" size="sm" /> : payOnSite ? 'Zarezerwuj' : 'Przejdź do płatności'}
         </Button>
       </Modal.Footer>
     </Modal>

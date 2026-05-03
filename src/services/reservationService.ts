@@ -25,6 +25,7 @@ export interface CreateReservationPayload {
   courtId: string;
   startTime: string;
   endTime: string;
+  payOnSite?: boolean;
 }
 
 export interface CreateCheckoutSessionPayload {
@@ -57,4 +58,7 @@ export const reservationService = {
 
   createCheckoutSession: (payload: CreateCheckoutSessionPayload) =>
     apiClient.post<CheckoutSessionResponse>('/api/payments/create-checkout-session', payload).then(res => res.data),
+
+  markPaidOnSite: (id: string) =>
+    apiClient.patch(`/api/reservations/${id}/mark-paid-on-site`).then(res => res.data),
 };

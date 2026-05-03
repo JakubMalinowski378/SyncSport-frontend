@@ -15,6 +15,10 @@ export function useMyReservations(params?: Record<string, string | number | unde
   return useQuery({
     queryKey: reservationKeys.list(params),
     queryFn: () => reservationService.getMyReservations(params),
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -23,6 +27,10 @@ export function useReservation(id: string) {
     queryKey: reservationKeys.detail(id),
     queryFn: () => reservationService.getReservation(id),
     enabled: !!id,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 }
 
@@ -39,5 +47,13 @@ export function useCreateCheckoutSession() {
   return useMutation({
     mutationFn: (payload: CreateCheckoutSessionPayload) =>
       reservationService.createCheckoutSession(payload),
+  });
+}
+
+export function useMarkPaidOnSite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reservationService.markPaidOnSite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reservationKeys.all }),
   });
 }

@@ -58,7 +58,7 @@ export interface CourtRateOverride {
 export interface Slot {
   startTime: string;
   endTime: string;
-  status: null | 'Pending' | 'Paid';
+  status: null | 'Pending' | 'Reserved';
 }
 
 export interface DaySlots {

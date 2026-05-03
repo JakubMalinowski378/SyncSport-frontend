@@ -96,7 +96,7 @@ export default function ReservationPage() {
   };
 
   const getSlotBadge = (slot: Slot) => {
-    if (slot.status === 'Paid') {
+    if (slot.status === 'Reserved') {
       return { bg: 'danger', label: 'Zajęte', clickable: false };
     }
     if (slot.status === 'Pending') {

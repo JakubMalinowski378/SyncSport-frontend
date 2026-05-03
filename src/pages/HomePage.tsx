@@ -19,6 +19,7 @@ import {
   BsImages,
 } from 'react-icons/bs';
 import { useFacilities } from '../hooks/useFacilityQueries';
+import type { OpeningHour } from '../services/facilityService';
 import '../styles/home-page.css';
 
 export default function HomePage() {

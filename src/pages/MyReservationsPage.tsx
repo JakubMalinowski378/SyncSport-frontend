@@ -13,10 +13,11 @@ import {
   BsSortUp,
   BsFunnel,
   BsCreditCard,
+  BsCashCoin,
 } from 'react-icons/bs';
 import dayjs from 'dayjs';
 import { useMyReservations } from '../hooks/useReservationQueries';
-import { useCreateCheckoutSession } from '../hooks/usePaymentQueries';
+import { useCreateCheckoutSession, useMarkPaidOnSite } from '../hooks/useReservationQueries';
 import type { ReservationStatus } from '../services/reservationService';
 
 type SortField = 'date' | 'status' | 'price';
@@ -69,6 +70,7 @@ export default function MyReservationsPage() {
 
   const { data, isLoading: loading, error: fetchError } = useMyReservations(queryParams);
   const createCheckoutSessionMutation = useCreateCheckoutSession();
+  const markPaidOnSiteMutation = useMarkPaidOnSite();
 
   const reservations = data?.items || [];
   const totalPages = data?.totalPages || 1;
@@ -90,6 +92,19 @@ export default function MyReservationsPage() {
     } catch (err: any) {
       setPayError(
         err.response?.data?.detail || 'Nie udało się rozpocząć płatności.'
+      );
+    } finally {
+      setPayingId(null);
+    }
+  };
+
+  const handleMarkPaidOnSite = async (reservationId: string) => {
+    setPayingId(reservationId);
+    try {
+      await markPaidOnSiteMutation.mutateAsync(reservationId);
+    } catch (err: any) {
+      setPayError(
+        err.response?.data?.detail || 'Nie udało się oznaczyć jako zapłacone.'
       );
     } finally {
       setPayingId(null);
@@ -272,18 +287,32 @@ export default function MyReservationsPage() {
                       </td>
                       <td className="text-end pe-3">
                         {r.status === 0 && (
-                          <button
-                            className="btn btn-primary btn-sm"
-                            disabled={payingId === r.id}
-                            onClick={() => payReservation(r.id)}
-                          >
-                            {payingId === r.id ? (
-                              <Spinner as="span" animation="border" size="sm" />
-                            ) : (
-                              <BsCreditCard className="me-1" />
-                            )}
-                            Zapłać
-                          </button>
+                          <div className="d-flex gap-1 justify-content-end">
+                            <button
+                              className="btn btn-primary btn-sm"
+                              disabled={payingId === r.id}
+                              onClick={() => payReservation(r.id)}
+                            >
+                              {payingId === r.id ? (
+                                <Spinner as="span" animation="border" size="sm" />
+                              ) : (
+                                <BsCreditCard className="me-1" />
+                              )}
+                              Zapłać
+                            </button>
+                            <button
+                              className="btn btn-outline-success btn-sm"
+                              disabled={payingId === r.id}
+                              onClick={() => handleMarkPaidOnSite(r.id)}
+                            >
+                              {payingId === r.id ? (
+                                <Spinner as="span" animation="border" size="sm" />
+                              ) : (
+                                <BsCashCoin className="me-1" />
+                              )}
+                              Zapłać na miejscu
+                            </button>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -337,18 +366,32 @@ export default function MyReservationsPage() {
                     </div>
                   )}
                   {r.status === 0 && (
-                    <button
-                      className="btn btn-primary btn-sm align-self-end mt-1"
-                      disabled={payingId === r.id}
-                      onClick={() => payReservation(r.id)}
-                    >
-                      {payingId === r.id ? (
-                        <Spinner as="span" animation="border" size="sm" />
-                      ) : (
-                        <BsCreditCard className="me-1" />
-                      )}
-                      Zapłać
-                    </button>
+                    <div className="d-flex gap-1 align-self-end mt-1">
+                      <button
+                        className="btn btn-primary btn-sm"
+                        disabled={payingId === r.id}
+                        onClick={() => payReservation(r.id)}
+                      >
+                        {payingId === r.id ? (
+                          <Spinner as="span" animation="border" size="sm" />
+                        ) : (
+                          <BsCreditCard className="me-1" />
+                        )}
+                        Zapłać
+                      </button>
+                      <button
+                        className="btn btn-outline-success btn-sm"
+                        disabled={payingId === r.id}
+                        onClick={() => handleMarkPaidOnSite(r.id)}
+                      >
+                        {payingId === r.id ? (
+                          <Spinner as="span" animation="border" size="sm" />
+                        ) : (
+                          <BsCashCoin className="me-1" />
+                        )}
+                        Na miejscu
+                      </button>
+                    </div>
                   )}
                 </Card.Body>
               </Card>
