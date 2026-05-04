@@ -14,6 +14,7 @@ import PaymentSuccessPage from './pages/PaymentSuccessPage';
 import PaymentFailurePage from './pages/PaymentFailurePage';
 import MyReservationsPage from './pages/MyReservationsPage';
 import PrivateRoute from './components/auth/PrivateRoute';
+import { UserRole } from './context/AuthContext';
 
 function About() {
   return (
@@ -49,7 +50,7 @@ export default function AppRoutes() {
               <PrivateRoute><ProfilePage /></PrivateRoute>
             } />
             <Route path="/panel-admina/*" element={
-              <PrivateRoute><AdminDashboardPage /></PrivateRoute>
+              <PrivateRoute roles={[UserRole.Admin, UserRole.Manager]}><AdminDashboardPage /></PrivateRoute>
             } />
           </Routes>
         </main>

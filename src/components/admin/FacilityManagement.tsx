@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Table, Button, Spinner, Alert, Card, Pagination, Form, Row, Col } from 'react-bootstrap';
 import { BsArrowUp, BsArrowDown, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../hooks/useAuth';
+import { UserRole } from '../../context/AuthContext';
 import { useFacilities } from '../../hooks/useFacilityQueries';
 import CreateFacilityModal from './modals/CreateFacilityModal';
 import CreateTariffModal from './modals/CreateTariffModal';
@@ -16,8 +18,14 @@ export interface Facility {
   address: string | null;
 }
 
-export default function FacilityManagement() {
+interface FacilityManagementProps {
+  managedFacilityIds?: string[];
+}
+
+export default function FacilityManagement({ managedFacilityIds }: FacilityManagementProps) {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const isManager = user?.role === UserRole.Manager && managedFacilityIds && managedFacilityIds.length > 0;
   const [pageNumber, setPageNumber] = useState(1);
   const pageSize = 15;
   const [searchTerm, setSearchTerm] = useState('');
@@ -39,6 +47,10 @@ export default function FacilityManagement() {
     SortColumn: sortColumn,
     SortOrder: sortOrder,
   };
+
+  if (isManager && managedFacilityIds!.length > 0) {
+    params.ManagedFacilityIds = managedFacilityIds!.join(',');
+  }
   const { data, isLoading, error } = useFacilities(params);
   const facilities = data?.items || [];
   const totalPages = data?.totalPages || 1;

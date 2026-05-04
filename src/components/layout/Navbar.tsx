@@ -32,6 +32,9 @@ export default function AppNavbar() {
                   {user.role === UserRole.Admin && (
                     <Nav.Link as={NavLink} to="/panel-admina">Panel administratora</Nav.Link>
                   )}
+                  {user.role === UserRole.Manager && (
+                    <Nav.Link as={NavLink} to="/panel-admina">Zarządzaj obiektami</Nav.Link>
+                  )}
                   <NavDropdown
                     title={
                       <span className="d-flex align-items-center gap-2">
