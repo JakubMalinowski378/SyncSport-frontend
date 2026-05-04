@@ -267,12 +267,12 @@ export default function MyReservationsPage() {
                   {filtered.map((r) => (
                     <tr key={r.id}>
                       <td className="ps-3 fw-semibold text-nowrap">
-                        {dayjs(r.startTime).format('DD.MM.YYYY')}
+                        {dayjs.utc(r.startTime).local().format('DD.MM.YYYY')}
                       </td>
                       <td className="text-nowrap">
                         <BsClock className="me-1 text-secondary" size={14} />
-                        {dayjs(r.startTime).format('HH:mm')} –{' '}
-                        {dayjs(r.endTime).format('HH:mm')}
+                        {dayjs.utc(r.startTime).local().format('HH:mm')} –{' '}
+                        {dayjs.utc(r.endTime).local().format('HH:mm')}
                       </td>
                       <td>{r.facilityName || <span className="text-secondary">—</span>}</td>
                       <td>{r.courtName || <span className="text-secondary">—</span>}</td>
@@ -340,7 +340,7 @@ export default function MyReservationsPage() {
                 <Card.Body className="d-flex flex-column gap-2">
                   <div className="d-flex justify-content-between align-items-center">
                     <span className="fw-bold">
-                      {dayjs(r.startTime).format('DD.MM.YYYY')}
+                      {dayjs.utc(r.startTime).local().format('DD.MM.YYYY')}
                     </span>
                     <Badge bg={STATUS_BADGE[r.status]} className="d-flex align-items-center gap-1">
                       {STATUS_ICON[r.status]}
@@ -349,8 +349,8 @@ export default function MyReservationsPage() {
                   </div>
                   <div className="text-secondary">
                     <BsClock className="me-1" size={14} />
-                    {dayjs(r.startTime).format('HH:mm')} –{' '}
-                    {dayjs(r.endTime).format('HH:mm')}
+                    {dayjs.utc(r.startTime).local().format('HH:mm')} –{' '}
+                    {dayjs.utc(r.endTime).local().format('HH:mm')}
                   </div>
                   <div className="d-flex flex-wrap gap-x-3 gap-1 small">
                     {r.facilityName && (

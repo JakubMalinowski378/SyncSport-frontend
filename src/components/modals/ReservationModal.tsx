@@ -45,8 +45,8 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
       const result = await calculatePriceMutation.mutateAsync({
         facilityId,
         courtId,
-        startTime: dayjs.utc(slot.startTime).toISOString(),
-        endTime: dayjs.utc(slot.endTime).toISOString(),
+        startTime: slot.startTime,
+        endTime: slot.endTime,
       });
       setPrice(result);
     } catch (err: any) {
@@ -61,8 +61,8 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
     try {
       const reservationId = await createReservationMutation.mutateAsync({
         courtId,
-        startTime: dayjs.utc(slot.startTime).toISOString(),
-        endTime: dayjs.utc(slot.endTime).toISOString(),
+        startTime: slot.startTime,
+        endTime: slot.endTime,
         payOnSite,
       });
 
@@ -94,8 +94,8 @@ export default function ReservationModal({ show, onHide, facilityId, courtId, sl
       <Modal.Body>
         {slot && (
           <div className="mb-3">
-            <p className="mb-1"><strong>Początek:</strong> {dayjs(slot.startTime).format('DD.MM.YYYY HH:mm')}</p>
-            <p className="mb-1"><strong>Koniec:</strong> {dayjs(slot.endTime).format('DD.MM.YYYY HH:mm')}</p>
+            <p className="mb-1"><strong>Początek:</strong> {dayjs.utc(slot.startTime).local().format('DD.MM.YYYY HH:mm')}</p>
+            <p className="mb-1"><strong>Koniec:</strong> {dayjs.utc(slot.endTime).local().format('DD.MM.YYYY HH:mm')}</p>
           </div>
         )}
 

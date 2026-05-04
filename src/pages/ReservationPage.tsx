@@ -16,10 +16,8 @@ dayjs.extend(isoWeek);
 dayjs.extend(customParseFormat);
 dayjs.locale('pl');
 
-function parseSlotTime(value: string): dayjs.Dayjs {
-  if (!value) return dayjs(value);
-  const clean = value.replace(/[Zz]$/, '').replace(/[+-]\d{2}:\d{2}$/, '');
-  return dayjs(clean);
+function toPolishTime(value: string): dayjs.Dayjs {
+  return dayjs.utc(value).local();
 }
 
 export default function ReservationPage() {
@@ -111,11 +109,11 @@ export default function ReservationPage() {
 
   const handleSlotClick = (slot: Slot) => {
     if (slot.status !== null) return;
-    // Disallow selecting slots in the past
+
     if (dayjs.utc(slot.startTime).isBefore(dayjs.utc())) return;
     setSelectedSlot({
-      startTime: dayjs.utc(slot.startTime).toISOString(),
-      endTime: dayjs.utc(slot.endTime).toISOString(),
+      startTime: slot.startTime,
+      endTime: slot.endTime,
     });
     setShowModal(true);
   };
@@ -228,7 +226,7 @@ export default function ReservationPage() {
                         weekReservations!.days.forEach((day) => {
                           day.slots.forEach((slot) => {
                             if (slot.startTime) {
-                              const parsed = parseSlotTime(slot.startTime);
+                              const parsed = toPolishTime(slot.startTime);
                               if (parsed.isValid()) {
                                 allTimes.add(parsed.format('HH:mm'));
                               }
@@ -243,7 +241,7 @@ export default function ReservationPage() {
                             {weekReservations!.days.map((day) => {
                               const slot = day.slots.find((s) => {
                                 if (!s.startTime) return false;
-                                const parsed = parseSlotTime(s.startTime);
+                                const parsed = toPolishTime(s.startTime);
                                 return parsed.isValid() && parsed.format('HH:mm') === time;
                               });
 
