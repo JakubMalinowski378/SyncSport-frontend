@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 
 export default function PrivateRoute({ children, roles }: PrivateRouteProps) {
   const { token, user } = useAuth();
-  
+
   if (!token) {
     return <Navigate to="/logowanie" replace />;
   }

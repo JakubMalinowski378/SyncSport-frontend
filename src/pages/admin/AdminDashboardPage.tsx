@@ -21,14 +21,14 @@ export default function AdminDashboardPage() {
           <Nav className="flex-column nav-pills gap-2">
             {isAdmin && (
               <Nav.Item>
-                <NavLink to="/panel-admina/uzytkownicy" 
+                <NavLink to="/panel-admina/uzytkownicy"
                          className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                   Zarządzanie użytkownikami
                 </NavLink>
               </Nav.Item>
             )}
             <Nav.Item>
-              <NavLink to="/panel-admina/obiekty" 
+              <NavLink to="/panel-admina/obiekty"
                        className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
                 Zarządzanie obiektami
               </NavLink>
