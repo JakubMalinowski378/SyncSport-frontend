@@ -15,7 +15,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
   const [surfaceType, setSurfaceType] = useState('');
   const [overrideReservationDuration, setOverrideReservationDuration] = useState<number | ''>('');
   const [images, setImages] = useState<File[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,13 +28,13 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
       formData.append('facilityId', facilityId);
       formData.append('name', name);
       formData.append('surfaceType', surfaceType);
-      
+
       if (overrideReservationDuration !== '') {
         formData.append('overrideReservationDuration', String(overrideReservationDuration));
       }
 
       images.forEach(img => formData.append('images', img));
-      
+
       await apiClient.post(`/api/facilities/${facilityId}/courts`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -63,7 +63,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Nazwa</Form.Label>
             <Form.Control
@@ -74,7 +74,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
               className="bg-card text-body border-secondary"
             />
           </Form.Group>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Typ nawierzchni</Form.Label>
             <Form.Control
@@ -97,7 +97,7 @@ export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }
               className="bg-card text-body border-secondary"
             />
           </Form.Group>
-          
+
           <ImageUploadReorder
             label="Zdjęcia kortu"
             images={images}

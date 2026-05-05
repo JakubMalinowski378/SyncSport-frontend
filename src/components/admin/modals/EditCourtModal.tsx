@@ -26,7 +26,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
   const [isActive, setIsActive] = useState(true);
   const [images, setImages] = useState<File[]>([]);
   const [existingImageUrls, setExistingImageUrls] = useState<string[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,13 +82,13 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
       formData.append('facilityId', facilityId);
       formData.append('courtId', court.id);
       formData.append('name', name);
-      
+
       if (overrideReservationDuration !== '') {
         formData.append('overrideReservationDuration', String(overrideReservationDuration));
       }
-      
+
       formData.append('isActive', String(isActive));
-      
+
       const existingImagesAsFiles = await Promise.all(
         existingImageUrls.map((imageUrl, index) => urlToFile(imageUrl, index))
       );
@@ -128,7 +128,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
         </Modal.Header>
         <Modal.Body className="bg-card text-body">
           {error && <Alert variant="danger">{error}</Alert>}
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Name</Form.Label>
             <Form.Control
@@ -139,7 +139,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
               className="bg-card text-body border-secondary"
             />
           </Form.Group>
-          
+
           <Form.Group className="mb-3">
             <Form.Label>Override Reservation Duration (minutes)</Form.Label>
             <Form.Control
