@@ -7,11 +7,10 @@ interface CreateCourtModalProps {
   show: boolean;
   onHide: () => void;
   onSuccess: () => void;
-  facilitySlug: string;
   facilityId: string;
 }
 
-export default function CreateCourtModal({ show, onHide, onSuccess, facilitySlug, facilityId }: CreateCourtModalProps) {
+export default function CreateCourtModal({ show, onHide, onSuccess, facilityId }: CreateCourtModalProps) {
   const [name, setName] = useState('');
   const [surfaceType, setSurfaceType] = useState('');
   const [overrideReservationDuration, setOverrideReservationDuration] = useState<number | ''>('');

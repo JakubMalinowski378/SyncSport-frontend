@@ -138,7 +138,6 @@ export default function FacilityCourts({ facilityId, facilitySlug }: FacilityCou
         show={showCreateModal}
         onHide={() => setShowCreateModal(false)}
         onSuccess={refresh}
-        facilitySlug={facilitySlug}
         facilityId={facilityId}
       />
 

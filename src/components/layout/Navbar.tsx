@@ -3,7 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth }  from '../../hooks/useAuth';
 import { UserRole } from '../../context/AuthContext';
-import { BsTrophyFill, BsCalendar3, BsBuilding, BsHeadset, BsMoonStars, BsSun, BsPersonCircle, BsBoxArrowRight, BsChevronDown } from 'react-icons/bs';
+import { BsTrophyFill, BsCalendar3, BsBuilding, BsMoonStars, BsSun, BsPersonCircle, BsBoxArrowRight, BsChevronDown } from 'react-icons/bs';
 
 export default function AppNavbar() {
   const { theme, toggleTheme } = useTheme();

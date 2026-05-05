@@ -55,7 +55,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
   const urlToFile = async (imageUrl: string, index: number): Promise<File> => {
     const response = await apiClient.get<Blob>(imageUrl, { responseType: 'blob' });
     const blob = response.data;
-    const mimeType = blob.type || response.headers['content-type'] || 'image/jpeg';
+    const mimeType = String(blob.type || response.headers['content-type'] || 'image/jpeg');
     const extension = mimeType.includes('png') ? 'png' : mimeType.includes('webp') ? 'webp' : 'jpg';
 
     return new File([blob], `existing-court-${index}.${extension}`, { type: mimeType });
