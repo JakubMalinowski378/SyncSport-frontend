@@ -1,73 +1,57 @@
-# React + TypeScript + Vite
+# SyncSport
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SyncSport to nowoczesna aplikacja webowa służąca do zarządzania, przeglądania i rezerwowania obiektów sportowych. Zapewnia wygodny dostęp zarówno dla użytkowników chcących wynająć boisko lub kort, jak i dla administratorów do zarządzania infrastrukturą.
 
-Currently, two official plugins are available:
+## Funkcjonalności
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Dla użytkowników:**
+  - Przeglądanie dostępnych obiektów sportowych i ich szczegółów
+  - Kalendarz rezerwacji i wynajem na określone godziny
+  - Obsługa płatności
+  - Panel klienta (historia rezerwacji, edycja profilu)
+  - Interfejs dostosowany do urządzeń mobilnych oraz obsługa trybu Dark Mode
 
-## React Compiler
+- **Dla administratorów / zarządców:**
+  - Zarządzanie obiektami i powiązanymi z nimi kortami/boiskami
+  - Definiowanie godzin otwarcia obiektów i taryf cenowych
+  - Zarządzanie rezerwacjami klientów
+  - Obsługa ról i zarządzanie użytkownikami platformy
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React, TypeScript, Vite
+- **Stylizacja:** Bootstrap, CSS
+- **Stan zapytań API:** React Query (TanStack Query)
+- **Routing:** React Router DOM
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Uruchomienie lokalne
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Zainstaluj zależności:
+   ```bash
+   npm install
+   ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2. Skonfiguruj plik `.env` (wzorując się na potrzebach API dla środowiska).
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+3. Uruchom serwer deweloperski:
+   ```bash
+   npm run dev
+   ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Backend i Demo
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- [Repozytorium z backendem](https://github.com/JakubMalinowski378/SyncSport)
+- [Demo](https://syncsport-czdxewevevbmbmb9.polandcentral-01.azurewebsites.net/)
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Konta Testowe
+
+Hasło dla wszystkich kont to `Password123!`.
+
+* **Użytkownik:** `user@syncsport.com` (Rola: User)
+* **Manager:** `manager@syncsport.com` (Rola: Manager)
+* **Administrator:** `admin@syncsport.com` (Rola: Admin)
+
+## Płatności (Sandbox)
+
+Moduł płatności podczas pracy w środowisku testowym wspiera fałszywą bramkę płatniczą. Do testowania skutecznych płatności użyj dowolnego kodu CVV, dowolnej przyszłej ważności karty oraz następującego numeru karty Sandbox:
+* **Numer karty:** `4242 4242 4242 4242`
