@@ -1,18 +1,10 @@
 import { useSearchParams, Link } from 'react-router-dom';
-import { Container, Card, Alert, Spinner, Button } from 'react-bootstrap';
+import { Container, Card, Button } from 'react-bootstrap';
 import { BsCheckCircleFill, BsArrowRight } from 'react-icons/bs';
-import { useReservation } from '../hooks/useReservationQueries';
 
 export default function PaymentSuccessPage() {
   const [searchParams] = useSearchParams();
   const reservationId = searchParams.get('reservationId');
-
-  const { data: reservation, isLoading: loading, error: fetchError } = useReservation(reservationId || '');
-  const error = !reservationId
-    ? 'Brak identyfikatora rezerwacji.'
-    : fetchError
-      ? (fetchError instanceof Error ? fetchError.message : 'Nie udało się pobrać szczegółów rezerwacji.')
-      : null;
 
   return (
     <Container className="py-5" style={{ maxWidth: '600px' }}>
@@ -35,52 +27,9 @@ export default function PaymentSuccessPage() {
             SyncSport!
           </p>
 
-          {loading && (
-            <div className="py-3">
-              <Spinner animation="border" size="sm" /> Ładowanie szczegółów…
-            </div>
-          )}
-
-          {error && <Alert variant="warning">{error}</Alert>}
-
-          {reservation && (
-            <div
-              className="w-100 mt-2 p-3 rounded-3"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
-            >
-              <div className="d-flex flex-column gap-2 text-start">
-                {reservation.facilityName && (
-                  <div>
-                    <small className="text-secondary">Obiekt</small>
-                    <div className="fw-semibold">{reservation.facilityName}</div>
-                  </div>
-                )}
-                {reservation.courtName && (
-                  <div>
-                    <small className="text-secondary">Kort / sala</small>
-                    <div className="fw-semibold">{reservation.courtName}</div>
-                  </div>
-                )}
-                <div>
-                  <small className="text-secondary">Numer rezerwacji</small>
-                  <div className="fw-semibold font-monospace">
-                    {reservation.id}
-                  </div>
-                </div>
-                <div>
-                  <small className="text-secondary">Termin</small>
-                  <div className="fw-semibold">
-                    {new Date(reservation.startTime).toLocaleString('pl-PL', {
-                      dateStyle: 'long',
-                      timeStyle: 'short',
-                    })}{' '}
-                    –{' '}
-                    {new Date(reservation.endTime).toLocaleString('pl-PL', {
-                      timeStyle: 'short',
-                    })}
-                  </div>
-                </div>
-              </div>
+          {reservationId && (
+            <div className="mt-2 text-secondary">
+              <small>Numer rezerwacji:</small> <span className="fw-semibold font-monospace">{reservationId}</span>
             </div>
           )}
 
