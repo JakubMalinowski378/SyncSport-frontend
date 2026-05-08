@@ -130,7 +130,7 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
           {error && <Alert variant="danger">{error}</Alert>}
 
           <Form.Group className="mb-3">
-            <Form.Label>Name</Form.Label>
+            <Form.Label>Nazwa</Form.Label>
             <Form.Control
               type="text"
               required
@@ -141,31 +141,31 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>Override Reservation Duration (minutes)</Form.Label>
+            <Form.Label>Nadpisz czas trwania rezerwacji (minuty)</Form.Label>
             <Form.Control
               type="number"
               min="1"
               value={overrideReservationDuration}
               onChange={e => setOverrideReservationDuration(e.target.value ? parseInt(e.target.value) : '')}
-              placeholder="Leave empty to use facility's duration"
+              placeholder="Zostaw puste, aby użyć domyślnego czasu obiektu"
               className="bg-card text-body border-secondary"
             />
           </Form.Group>
 
           <ImageUploadReorder
-            label="Court Images"
+            label="Zdjęcia kortu"
             images={images}
             onChange={setImages}
             existingImageUrls={existingImageUrls}
             onExistingImageUrlsChange={setExistingImageUrls}
-            existingLabel="Current images"
-            removeTitle="Remove image"
+            existingLabel="Obecne zdjęcia"
+            removeTitle="Usuń zdjęcie"
           />
 
           <Form.Group className="mb-3">
             <Form.Check
               type="switch"
-              label="Is Active"
+              label="Aktywny"
               checked={isActive}
               onChange={e => setIsActive(e.target.checked)}
             />
@@ -173,10 +173,10 @@ export default function EditCourtModal({ show, onHide, onSuccess, facilityId, co
         </Modal.Body>
         <Modal.Footer className="bg-card border-secondary">
           <Button variant="secondary" onClick={onHide}>
-            Cancel
+            Anuluj
           </Button>
           <Button variant="primary" type="submit" disabled={loading}>
-            {loading ? <Spinner size="sm" /> : 'Save Changes'}
+            {loading ? <Spinner size="sm" /> : 'Zapisz zmiany'}
           </Button>
         </Modal.Footer>
       </Form>
