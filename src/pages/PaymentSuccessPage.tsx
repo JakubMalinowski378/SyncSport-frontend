@@ -88,7 +88,7 @@ export default function PaymentSuccessPage() {
             <Button as={Link as any} to="/" variant="primary">
               Strona główna
             </Button>
-            <Button as={Link as any} to="/profil" variant="outline-secondary">
+            <Button as={Link as any} to="/moje-rezerwacje" variant="outline-secondary">
               Moje rezerwacje <BsArrowRight className="ms-1" />
             </Button>
           </div>
