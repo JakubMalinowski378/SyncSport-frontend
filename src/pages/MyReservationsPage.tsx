@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Card, Spinner, Alert, Table, Badge, Form, Row, Col, InputGroup } from 'react-bootstrap';
+import { Container, Card, Spinner, Alert, Table, Badge, Form, Row, Col, InputGroup, Modal, Button } from 'react-bootstrap';
 import {
   BsCalendarCheck,
   BsClock,
@@ -57,6 +57,9 @@ export default function MyReservationsPage() {
   const [payingId, setPayingId] = useState<string | null>(null);
   const [, setPayError] = useState<string | null>(null);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [reservationToConfirm, setReservationToConfirm] = useState<string | null>(null);
+
   const queryParams: Record<string, string | number> = {
     PageNumber: page,
     PageSize: 10,
@@ -108,6 +111,14 @@ export default function MyReservationsPage() {
       );
     } finally {
       setPayingId(null);
+    }
+  };
+
+  const confirmMarkPaidOnSite = async () => {
+    if (reservationToConfirm) {
+      setShowConfirmModal(false);
+      await handleMarkPaidOnSite(reservationToConfirm);
+      setReservationToConfirm(null);
     }
   };
 
@@ -303,7 +314,10 @@ export default function MyReservationsPage() {
                             <button
                               className="btn btn-outline-success btn-sm"
                               disabled={payingId === r.id}
-                              onClick={() => handleMarkPaidOnSite(r.id)}
+                              onClick={() => {
+                                setReservationToConfirm(r.id);
+                                setShowConfirmModal(true);
+                              }}
                             >
                               {payingId === r.id ? (
                                 <Spinner as="span" animation="border" size="sm" />
@@ -382,7 +396,10 @@ export default function MyReservationsPage() {
                       <button
                         className="btn btn-outline-success btn-sm"
                         disabled={payingId === r.id}
-                        onClick={() => handleMarkPaidOnSite(r.id)}
+                        onClick={() => {
+                          setReservationToConfirm(r.id);
+                          setShowConfirmModal(true);
+                        }}
                       >
                         {payingId === r.id ? (
                           <Spinner as="span" animation="border" size="sm" />
@@ -421,6 +438,24 @@ export default function MyReservationsPage() {
           )}
         </>
       )}
+
+      <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Potwierdzenie</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Czy na pewno chcesz zapłacić za tę rezerwację na miejscu u obsługi obiektu?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+            Anuluj
+          </Button>
+          <Button variant="success" onClick={confirmMarkPaidOnSite}>
+            <BsCashCoin className="me-1" />
+            Potwierdź
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

@@ -60,5 +60,5 @@ export const reservationService = {
     apiClient.post<CheckoutSessionResponse>('/api/payments/create-checkout-session', payload).then(res => res.data),
 
   markPaidOnSite: (id: string) =>
-    apiClient.patch(`/api/reservations/${id}/mark-paid-on-site`).then(res => res.data),
+    apiClient.patch(`/api/reservations/me/${id}/mark-awaiting-on-site-payment`).then(res => res.data),
 };
