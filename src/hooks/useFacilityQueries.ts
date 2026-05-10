@@ -8,7 +8,8 @@ export const facilityKeys = {
     [...facilityKeys.lists(), params] as const,
   details: () => [...facilityKeys.all, 'detail'] as const,
   detail: (slug: string) => [...facilityKeys.details(), slug] as const,
-  courts: (facilitySlug: string) => [...facilityKeys.all, 'courts', facilitySlug] as const,
+  courts: (facilitySlug: string, params?: Record<string, string | number | undefined>) =>
+    [...facilityKeys.all, 'courts', facilitySlug, params] as const,
   court: (facilitySlug: string, courtSlug: string) =>
     [...facilityKeys.all, 'court', facilitySlug, courtSlug] as const,
   tariffs: (facilityId: string) => [...facilityKeys.all, 'tariffs', facilityId] as const,
@@ -33,7 +34,7 @@ export function useFacility(slug: string) {
 
 export function useCourts(facilitySlug: string, params?: Record<string, string | number | undefined>) {
   return useQuery({
-    queryKey: facilityKeys.courts(facilitySlug),
+    queryKey: facilityKeys.courts(facilitySlug, params),
     queryFn: () => facilityService.getCourts(facilitySlug, params),
     enabled: !!facilitySlug,
   });

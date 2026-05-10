@@ -17,7 +17,13 @@ dayjs.extend(customParseFormat);
 dayjs.locale('pl');
 
 function toPolishTime(value: string): dayjs.Dayjs {
-  return dayjs.utc(value).local();
+  // If timestamp has timezone info (Z or offset), parse as UTC then convert to local
+  const hasTimezone = /[Z+-]\d{2}:\d{2}$/.test(value) || value.endsWith('Z');
+  if (hasTimezone) {
+    return dayjs.utc(value).local();
+  }
+  // No timezone info — backend sent local time, parse directly
+  return dayjs(value);
 }
 
 export default function ReservationPage() {
@@ -100,7 +106,7 @@ export default function ReservationPage() {
     if (slot.status === 'Pending') {
       return { bg: 'warning', label: 'Oczekuje', clickable: false };
     }
-    const isPast = dayjs.utc(slot.startTime).isBefore(dayjs.utc());
+    const isPast = toPolishTime(slot.startTime).isBefore(dayjs());
     if (isPast) {
       return { bg: 'secondary', label: 'Minęło', clickable: false };
     }
@@ -110,7 +116,7 @@ export default function ReservationPage() {
   const handleSlotClick = (slot: Slot) => {
     if (slot.status !== null) return;
 
-    if (dayjs.utc(slot.startTime).isBefore(dayjs.utc())) return;
+    if (toPolishTime(slot.startTime).isBefore(dayjs())) return;
     setSelectedSlot({
       startTime: slot.startTime,
       endTime: slot.endTime,

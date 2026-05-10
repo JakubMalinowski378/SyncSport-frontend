@@ -57,3 +57,46 @@ export function useMarkPaidOnSite() {
     onSuccess: () => qc.invalidateQueries({ queryKey: reservationKeys.all }),
   });
 }
+
+export function useAdminCreateReservation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      userId: string;
+      courtId: string;
+      startTime: string;
+      endTime: string;
+      payOnSite: boolean;
+    }) => reservationService.adminCreateReservation(payload),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reservationKeys.all }),
+  });
+}
+
+export function useAdminDeleteReservation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, facilityId }: { id: string; facilityId: string }) =>
+      reservationService.adminDeleteReservation(id, facilityId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reservationKeys.all }),
+  });
+}
+
+export function useAdminMarkPaidOnSite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => reservationService.adminMarkPaidOnSite(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reservationKeys.all }),
+  });
+}
+
+export function useUserReservations(userId: string, params?: Record<string, string | number | undefined>) {
+  return useQuery({
+    queryKey: [...reservationKeys.all, 'user', userId, params],
+    queryFn: () => reservationService.getReservationsByUserId(userId, params),
+    enabled: !!userId,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
+  });
+}

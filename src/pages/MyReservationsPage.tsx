@@ -25,23 +25,23 @@ type SortDir = 'asc' | 'desc';
 
 const STATUS_LABEL: Record<ReservationStatus, string> = {
   0: 'Oczekująca',
-  1: 'Potwierdzona',
+  1: 'Opłacona',
   2: 'Anulowana',
-  3: 'Zakończona',
+  3: 'Oczekuje na płatność na miejscu',
 };
 
 const STATUS_BADGE: Record<ReservationStatus, string> = {
   0: 'warning',
   1: 'success',
   2: 'danger',
-  3: 'secondary',
+  3: 'info',
 };
 
 const STATUS_ICON: Record<ReservationStatus, React.ReactNode> = {
   0: <BsHourglassSplit />,
   1: <BsCheckCircle />,
   2: <BsXCircle />,
-  3: <BsCalendarCheck />,
+  3: <BsCashCoin />,
 };
 
 const ALL_STATUSES: ReservationStatus[] = [0, 1, 2, 3];

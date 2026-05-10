@@ -61,4 +61,24 @@ export const reservationService = {
 
   markPaidOnSite: (id: string) =>
     apiClient.patch(`/api/reservations/me/${id}/mark-awaiting-on-site-payment`).then(res => res.data),
+
+  getReservationsByUserId: (userId: string, params?: Record<string, string | number | undefined>) =>
+    apiClient.get<UserReservationResponsePagedResult>(`/api/reservations/users/${userId}`, { params }).then(res => res.data),
+
+  getUserReservations: (userId: string, params?: Record<string, string | number | undefined>) =>
+    apiClient.get<UserReservationResponsePagedResult>(`/api/users/${userId}/reservations`, { params }).then(res => res.data),
+
+  adminCreateReservation: (payload: {
+    userId: string;
+    courtId: string;
+    startTime: string;
+    endTime: string;
+    payOnSite: boolean;
+  }) => apiClient.post<string>('/api/reservations', payload).then(res => res.data),
+
+  adminDeleteReservation: (id: string, facilityId: string) =>
+    apiClient.delete(`/api/reservations/${id}/facility/${facilityId}`).then(res => res.data),
+
+  adminMarkPaidOnSite: (id: string) =>
+    apiClient.patch(`/api/reservations/${id}/mark-paid-on-site`).then(res => res.data),
 };

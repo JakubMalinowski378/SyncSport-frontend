@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { UserRole } from '../../context/AuthContext';
 import UserManagement from '../../components/admin/UserManagement';
 import FacilityManagement from '../../components/admin/FacilityManagement';
+import ReservationManagement from '../../components/admin/ReservationManagement';
 
 export default function AdminDashboardPage() {
   const { user } = useAuth();
@@ -33,6 +34,12 @@ export default function AdminDashboardPage() {
                 Zarządzanie obiektami
               </NavLink>
             </Nav.Item>
+            <Nav.Item>
+              <NavLink to="/panel-admina/rezerwacje"
+                       className={({ isActive }) => `nav-link rounded-3 ${isActive ? 'active' : 'text-body'}`}>
+                Zarządzanie rezerwacjami
+              </NavLink>
+            </Nav.Item>
           </Nav>
         </Col>
 
@@ -49,6 +56,7 @@ export default function AdminDashboardPage() {
                 ? <FacilityManagement managedFacilityIds={managedFacilityIds} />
                 : <FacilityManagement />
             } />
+            <Route path="rezerwacje" element={<ReservationManagement />} />
           </Routes>
         </Col>
       </Row>
